@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <!--Import Google Icon Font-->
+    <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!--Import materialize.css-->
+    <link type="text/css" rel="stylesheet" href="assets/materialize.min.css" media="screen,projection"/>
+
+
+    <script src="assets/angular.min.js"></script>
+    <script src="assets/firebase.js"></script>
+    <script src="assets/angularfire.min.js"></script>
+    <script type="text/javascript" src="assets/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="assets/materialize.min.js"></script>
+
+    <script src="assets/require.js"></script>
+    <script src="popup.mp3"></script>
+
+
+</head>
+<body ng-controller="myCtrl" style="background: #efefef">
+
+<div class="container">
+    <div class="row">
+
+        <div class="col s12">
+            <h1 style="text-transform: uppercase;text-align: center"><strong>Ranking Admin</strong></h1>
+        </div>
+
+        <div class="col s12">
+
+            <div style="background: white; border-radius: 3px; box-shadow: 0 10px 15px #888; padding: 15px">
+
+                <h3>User to Scan</h3>
+                <input placeholder="Paste facebook user link (https://www.facebook.com/...)" ng-model="userLinks"/>
+                <button class="btn waves-effect waves-light purple" ng-click="addUser()">Add user link</button>
+                <table class="bordered striped highlight centered responsive-table" style="border: 1px solid #ccc">
+                    <thead>
+                    <tr>
+                        <th data-field="link">Link</th>
+                        <th data-field="name">Name</th>
+                        <th data-field="userId">User ID</th>
+                        <th data-field="userId">Scaned</th>
+                        <th data-field="action">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="x in userToScan">
+                        <td>
+                            <a href="https://www.facebook.com/{{x.username}}" target="_blank">https://www.facebook.com/{{x.username}}</a>
+                        </td>
+                        <td>
+                            <input ng-model="x.displayName" ng-change="userToScan.$save(x)" />
+                        </td>
+                        <td>{{x.$id}}</td>
+                        <td>{{x.scaned}}</td>
+                        <td>
+                            <button class="btn waves-effect waves-light purple" ng-click="scanUser(x.$id)">{{x.scaned?'ReScan':'Scan now'}}</button>
+                            <button class="btn waves-effect waves-light pink" ng-click="deleteUser(x)">Delete User</button>
+                        </td>
+                        <!--<td ng-repeat="y in x.cookies">{{y.name}}</td>-->
+                    </tr>
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+
+        <div class="col s12" style="margin-top: 40px">
+            <div style="background: white; border-radius: 3px; box-shadow: 0 10px 15px #888; padding: 15px">
+                <h3>Ranked Pages</h3>
+                <table class="bordered striped highlight centered responsive-table" style="border: 1px solid #ccc">
+                    <thead>
+                    <tr>
+                        <th data-field="name">Rank</th>
+                        <th data-field="name">Count</th>
+                        <th data-field="name">Name</th>
+                        <th data-field="userId">Category</th>
+                        <th data-field="userId">Likes</th>
+                        <th data-field="userId">Link</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr ng-repeat="x in rankedPages | orderBy: '-count' track by $index">
+                        <td>{{$index}}</td>
+                        <td>{{x.count}}</td>
+                        <td>{{x.name}}</td>
+                        <td>{{x.category}}</td>
+                        <td>{{x.likes}}</td>
+                        <td>
+                            <a href="https://www.facebook.com/{{x.id}}" target="_blank">https://www.facebook.com/{{x.id}}</a>
+                        </td>
+                        <!--<td ng-repeat="y in x.cookies">{{y.name}}</td>-->
+                    </tr>
+                    </tbody>
+
+                </table>
+                <br>
+                <br>
+            </div>
+
+        </div>
+
+
+    </div>
+</div>
+
+
+</body>
+</html>
