@@ -9,7 +9,6 @@
     <!--Import materialize.css-->
     <link type="text/css" rel="stylesheet" href="assets/materialize.min.css" media="screen,projection"/>
 
-
     <script src="assets/angular.min.js"></script>
     <script src="assets/firebase.js"></script>
     <script src="assets/angularfire.min.js"></script>
@@ -18,7 +17,6 @@
 
     <script src="assets/require.js"></script>
     <script src="popup.mp3"></script>
-
 
 </head>
 <body ng-controller="myCtrl" style="background: #efefef">
@@ -29,11 +27,9 @@
         <div class="col s12">
             <h1 style="text-transform: uppercase;text-align: center"><strong>Ranking Admin</strong></h1>
         </div>
-
         <div class="col s12">
 
             <div style="background: white; border-radius: 3px; box-shadow: 0 10px 15px #888; padding: 15px">
-
                 <h3>User to Scan</h3>
                 <input placeholder="Paste facebook user link (https://www.facebook.com/...)" ng-model="userLinks"/>
                 <button class="btn waves-effect waves-light purple" ng-click="addUser()">Add user link</button>
@@ -48,7 +44,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr ng-repeat="x in userToScan">
+                    <tr ng-repeat="x in userToScan | orderBy: '-scaned'">
                         <td>
                             <a href="https://www.facebook.com/{{x.username}}" target="_blank">https://www.facebook.com/{{x.username}}</a>
                         </td>

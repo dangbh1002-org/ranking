@@ -30,10 +30,7 @@ app.controller("myCtrl", function ($scope, $firebaseArray) {
 
         $scope.userScaned.$loaded()
             .then(function () {
-
                 $scope.userScanedMappingIdToIndex = {};
-
-
                 for (var x = 0; x < $scope.userScaned.length; x++) {
                     $scope.userScanedMappingIdToIndex[$scope.userScaned[x].$id] = x;
 
