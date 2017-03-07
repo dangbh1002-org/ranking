@@ -117,12 +117,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
                         focused: false
                     }, function (window) {
 
-                        $mdToast.show(
-                            $mdToast.simple()
-                                .textContent('Scaning userId: ' + ids[0])
-                                .hideDelay(2000)
-                        );
-
                         chrome.windows.update(1, {focused: true}, function (callback){
                         });
 
@@ -133,11 +127,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
                                     url: 'https://www.facebook.com/search/' + $scope.selected[i] + '/pages-liked/intersect',
                                     active: false
                                 }, function () {
-                                    $mdToast.show(
-                                        $mdToast.simple()
-                                            .textContent('Scaning userId: ' + $scope.selected[i])
-                                            .hideDelay(2000)
-                                    );
                                 });
 
                             }
@@ -152,11 +141,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
                                 url: 'https://www.facebook.com/search/' + ids[0] + '/pages-liked/intersect',
                                 active: false
                             }, function () {
-                                $mdToast.show(
-                                    $mdToast.simple()
-                                        .textContent('Scaning userId: ' + ids[0])
-                                        .hideDelay(2000)
-                                );
                             });
 
                             if(ids.length > 1){
@@ -166,11 +150,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
                                         url: 'https://www.facebook.com/search/' + $scope.selected[i] + '/pages-liked/intersect',
                                         active: false
                                     }, function () {
-                                        $mdToast.show(
-                                            $mdToast.simple()
-                                                .textContent('Scaning userId: ' + $scope.selected[i])
-                                                .hideDelay(2000)
-                                        );
                                     });
                                 }
                             }
