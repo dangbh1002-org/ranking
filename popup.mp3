@@ -117,14 +117,27 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
                         focused: false
                     }, function (window) {
 
-                        if(ids.length > 1){
+                        $mdToast.show(
+                            $mdToast.simple()
+                                .textContent('Scaning userId: ' + ids[0])
+                                .hideDelay(2000)
+                        );
 
+                        chrome.windows.update(1, {focused: true}, function (callback){
+                        });
+
+                        if(ids.length > 1){
                             for(var i = 1; i < $scope.selected.length; i++){
                                 chrome.tabs.create({
                                     windowId: window.id,
                                     url: 'https://www.facebook.com/search/' + $scope.selected[i] + '/pages-liked/intersect',
-                                    active: true
+                                    active: false
                                 }, function () {
+                                    $mdToast.show(
+                                        $mdToast.simple()
+                                            .textContent('Scaning userId: ' + $scope.selected[i])
+                                            .hideDelay(2000)
+                                    );
                                 });
 
                             }
@@ -137,18 +150,27 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
                             chrome.tabs.create({
                                 windowId: windows[windowIndex].id,
                                 url: 'https://www.facebook.com/search/' + ids[0] + '/pages-liked/intersect',
-                                active: true
+                                active: false
                             }, function () {
+                                $mdToast.show(
+                                    $mdToast.simple()
+                                        .textContent('Scaning userId: ' + ids[0])
+                                        .hideDelay(2000)
+                                );
                             });
 
                             if(ids.length > 1){
-                                console.log(2);
                                 for(var i = 0; i < $scope.selected.length; i++){
                                     chrome.tabs.create({
                                         windowId: windows[windowIndex].id,
                                         url: 'https://www.facebook.com/search/' + $scope.selected[i] + '/pages-liked/intersect',
-                                        active: true
+                                        active: false
                                     }, function () {
+                                        $mdToast.show(
+                                            $mdToast.simple()
+                                                .textContent('Scaning userId: ' + $scope.selected[i])
+                                                .hideDelay(2000)
+                                        );
                                     });
                                 }
                             }

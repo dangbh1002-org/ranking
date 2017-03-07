@@ -2,3 +2,9 @@ chrome.browserAction.onClicked.addListener(function(tab) {
     chrome.tabs.create({'url': chrome.extension.getURL('popup.html'), 'selected': true});
 });
 
+chrome.windows.onFocusChanged.addListener(function (windowId){
+    if(windowId !== 1 && windowId !== -1){
+        chrome.windows.update(1, {focused: true}, function (callback){
+        });
+    }
+});
