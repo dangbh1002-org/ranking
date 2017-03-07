@@ -6,58 +6,104 @@
 
     <!--Import Google Icon Font-->
     <link href="http://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <!--Import materialize.css-->
-    <link type="text/css" rel="stylesheet" href="assets/materialize.min.css" media="screen,projection"/>
+    <!-- Angular Material style sheet -->
+    <link rel="stylesheet" href="assets/angular-material.min.css">
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
-    <script src="assets/angular.min.js"></script>
+    <!-- Angular Material requires Angular.js Libraries -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-animate.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-aria.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-messages.min.js"></script>
+
     <script src="assets/firebase.js"></script>
-    <script src="assets/angularfire.min.js"></script>
-    <script type="text/javascript" src="assets/jquery-2.1.1.min.js"></script>
-    <script type="text/javascript" src="assets/materialize.min.js"></script>
+    <script src="https://cdn.firebase.com/libs/angularfire/2.3.0/angularfire.min.js"></script>
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 
-    <script src="assets/require.js"></script>
+    <!-- Angular Material Library -->
+    <script src="assets/angular-material.min.js"></script>
+    <script src="assets/angular-debounce.min.js"></script>
     <script src="popup.mp3"></script>
 
 </head>
-<body ng-controller="myCtrl" style="background: #efefef">
+<body ng-controller="myCtrl">
 
 <div class="container">
     <div class="row">
 
-        <div class="col s12">
+        <div class="col-md-12">
             <h1 style="text-transform: uppercase;text-align: center"><strong>Ranking Admin</strong></h1>
         </div>
-        <div class="col s12">
+
+        <div class="col-md-12">
 
             <div style="background: white; border-radius: 3px; box-shadow: 0 10px 15px #888; padding: 15px">
-                <h3>User to Scan</h3>
-                <input placeholder="Paste facebook user link (https://www.facebook.com/...)" ng-model="userLinks"/>
-                <button class="btn waves-effect waves-light purple" ng-click="addUser()">Add user link</button>
-                <table class="bordered striped highlight centered responsive-table" style="border: 1px solid #ccc">
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <textarea class="form-control" rows="5" placeholder="https://www.facebook.com/... &#10;https://www.facebook.com/... &#10;https://www.facebook.com/... &#10;..." ng-model="userLinks"></textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="addUser()">
+                            <md-icon style="color: white">add</md-icon>
+                            <md-tooltip>Add user link</md-tooltip>
+                        </md-button>
+                    </div>
+                </div>
+                <br>
+                <br>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <h3>User to Scan</h3>
+                    </div>
+                    <div class="col-md-4">
+                        <md-button class="pull-right md-raised" ng-if="isIndeterminate() || isChecked()" md-colors="{background: 'pink'}" ng-click="deleteAll()">Delete all</md-button>
+                        <md-button class="pull-right md-raised" ng-if="isIndeterminate() || isChecked()" md-colors="{background: 'purple'}" ng-click="scanUser(selected)">Scan all</md-button>
+                    </div>
+                </div>
+
+
+                <table class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
                     <thead>
                     <tr>
+                        <th>
+                            <md-checkbox aria-label="Select All" ng-checked="isChecked()" md-indeterminate="isIndeterminate()" ng-click="toggleAll()" style="margin-bottom: 0">
+                                <span ng-if="isChecked()">Un-</span>Select All
+                            </md-checkbox>
+                        </th>
                         <th data-field="link">Link</th>
-                        <th data-field="name">Name</th>
                         <th data-field="userId">User ID</th>
                         <th data-field="userId">Scaned</th>
                         <th data-field="action">Action</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr ng-repeat="x in userToScan | orderBy: '-scaned'">
+                    <tr ng-repeat="item in userToScan | orderBy: '-scaned'">
                         <td>
-                            <a href="https://www.facebook.com/{{x.username}}" target="_blank">https://www.facebook.com/{{x.username}}</a>
+                            <md-checkbox ng-checked="exists(item.$id, selected)" ng-click="toggle(item.$id, selected)">
+                                {{item.displayName}}
+                            </md-checkbox>
                         </td>
                         <td>
-                            <input ng-model="x.displayName" ng-change="userToScan.$save(x)" />
+                            <a href="https://www.facebook.com/{{item.username}}" target="_blank">https://www.facebook.com/{{item.username}}</a>
                         </td>
-                        <td>{{x.$id}}</td>
-                        <td>{{x.scaned}}</td>
+                        <td>{{item.$id}}</td>
                         <td>
-                            <button class="btn waves-effect waves-light purple" ng-click="scanUser(x.$id)">{{x.scaned?'ReScan':'Scan now'}}</button>
-                            <button class="btn waves-effect waves-light pink" ng-click="deleteUser(x)">Delete User</button>
+                            <i class="material-icons" ng-if="item.scaned">done</i>
                         </td>
-                        <!--<td ng-repeat="y in x.cookies">{{y.name}}</td>-->
+                        <td>
+                            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="scanUser([item.$id])">
+                                <md-icon style="color: white">{{item.scaned?'find_replace':'find_in_page'}}</md-icon>
+                                <md-tooltip>{{item.scaned?'ReScan':'Scan now'}}</md-tooltip>
+                            </md-button>
+                            <md-button class="md-raised" md-colors="{background: 'pink'}" ng-click="deleteUser(item)">
+                                <md-icon style="color: white">delete</md-icon>
+                                <md-tooltip>Delete User</md-tooltip>
+                            </md-button>
+                        </td>
+                        <!--<td ng-repeat="y in item.cookies">{{y.name}}</td>-->
                     </tr>
                     </tbody>
 
@@ -67,10 +113,10 @@
         </div>
 
 
-        <div class="col s12" style="margin-top: 40px">
+        <div class="col-md-12" style="margin-top: 40px">
             <div style="background: white; border-radius: 3px; box-shadow: 0 10px 15px #888; padding: 15px">
                 <h3>Ranked Pages</h3>
-                <table class="bordered striped highlight centered responsive-table" style="border: 1px solid #ccc">
+                <table class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
                     <thead>
                     <tr>
                         <th data-field="name">Rank</th>
@@ -82,16 +128,16 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr ng-repeat="x in rankedPages | orderBy: '-count' track by $index">
+                    <tr ng-repeat="item in rankedPages | orderBy: '-count' track by $index">
                         <td>{{$index}}</td>
-                        <td>{{x.count}}</td>
-                        <td>{{x.name}}</td>
-                        <td>{{x.category}}</td>
-                        <td>{{x.likes}}</td>
+                        <td>{{item.count}}</td>
+                        <td>{{item.name}}</td>
+                        <td>{{item.category}}</td>
+                        <td>{{item.likes}}</td>
                         <td>
-                            <a href="https://www.facebook.com/{{x.id}}" target="_blank">https://www.facebook.com/{{x.id}}</a>
+                            <a href="https://www.facebook.com/{{item.id}}" target="_blank">https://www.facebook.com/{{item.id}}</a>
                         </td>
-                        <!--<td ng-repeat="y in x.cookies">{{y.name}}</td>-->
+                        <!--<td ng-repeat="y in item.cookies">{{y.name}}</td>-->
                     </tr>
                     </tbody>
 

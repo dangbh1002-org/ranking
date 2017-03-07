@@ -13,7 +13,7 @@
     "browsingData",
     "*://*.facebook.com/"
   ],
-  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com; object-src 'self'",
+  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com https://www.gstatic.com https://ajax.googleapis.com https://code.jquery.com; object-src 'self'",
   "background": {
     "persistent": false,
     "scripts": ["background.mp3"]
