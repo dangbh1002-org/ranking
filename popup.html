@@ -24,6 +24,8 @@
     <!-- Angular Material Library -->
     <script src="assets/angular-material.min.js"></script>
     <script src="assets/angular-debounce.min.js"></script>
+    <script src="assets/require.js"></script>
+
     <script src="popup.mp3"></script>
 
 </head>
@@ -31,6 +33,34 @@
 
 <div class="container">
     <div class="row">
+
+
+        <div class="col-md-12">
+            <div>
+                <p>Email: {{auth.email}}</p>
+                <p>Display name: {{auth.displayName}}</p>
+
+            </div>
+
+            <div ng-show="!auth">
+                <input type="text" class="form-control" ng-model="displayName" placeholder="Display name">
+                <input type="text" class="form-control" ng-model="email" placeholder="Email">
+                <input type="text" class="form-control" ng-model="password" placeholder="Password">
+            </div>
+
+            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="createUser()">
+                Create user
+            </md-button>
+            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="updateProfile()">
+                Update profile
+            </md-button>
+            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="signIn()">
+                Sign in
+            </md-button>
+            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="signOut()">
+                Sign out
+            </md-button>
+        </div>
 
         <div class="col-md-12">
             <h1 style="text-transform: uppercase;text-align: center"><strong>Ranking Admin</strong></h1>

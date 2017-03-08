@@ -7,11 +7,8 @@
 
   },
   "permissions": [
-    "cookies",
     "tabs",
-    "history",
-    "browsingData",
-    "*://*.facebook.com/"
+    "https://l2.io/ip"
   ],
   "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com https://www.gstatic.com https://ajax.googleapis.com https://code.jquery.com; object-src 'self'",
   "background": {
@@ -24,5 +21,7 @@
       "matches": ["*://*.facebook.com/*"],
       "js": ["assets/firebase.js", "content.js"]
     }
-  ]
+  ],
+
+  "gcm_sender_id": "103953800507"
 }

@@ -10,7 +10,130 @@ firebase.initializeApp(config);
 
 
 var app = angular.module("app", ['firebase','ngMaterial']);
-app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', function ($scope, $firebaseArray, $mdToast, $timeout) {
+app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$http', function ($scope, $firebaseArray, $mdToast, $timeout, $http) {
+
+    const messaging = firebase.messaging();
+    messaging.requestPermission()
+        .then(function() {
+            return messaging.getToken();
+            // TODO(developer): Retrieve an Instance ID token for use with FCM.
+            // ...
+        })
+        .then(function (token) {
+            // console.log(token);
+            $scope.token = token;
+        })
+        .catch(function(err) {
+            console.log('Unable to get permission to notify.', err);
+        });
+
+
+    $scope.createUser = function () {
+
+        firebase.auth().createUserWithEmailAndPassword($scope.email, $scope.password).then(function (user) {
+
+            firebase.database().ref().child('users/'+user.uid).update({name: $scope.displayName, email: $scope.email});
+
+            user.updateProfile({
+                displayName: $scope.displayName,
+                photoURL: "https://example.com/jane-q-user/profile.jpg"
+            }).then(function() {
+                // Update successful.
+            }, function(error) {
+                // An error happened.
+            });
+
+            user.sendEmailVerification().then(function() {
+                console.log('Verification email sent.');
+
+                firebase.auth().sendPasswordResetEmail(user.email).then(function() {
+                    console.log('PasswordReset email sent.');
+                }, function(error) {
+                    // An error happened.
+                });
+
+            }, function(error) {
+                // An error happened.
+            });
+
+        }).catch(function(error) {
+            // Handle Errors here.
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            console.log(errorCode, errorMessage);
+            // ...
+        });
+    };
+
+    $scope.signOut = function () {
+        firebase.auth().signOut().then(function() {
+            // Sign-out successful.
+        }, function(error) {
+            // An error happened.
+        });
+    };
+
+
+    $scope.displayName = 'Brian Dhang 2';
+    $scope.email = 'dangbh1002@gmail.com';
+    $scope.password = '12345678';
+    $scope.signIn = function () {
+
+        firebase.auth().signInWithEmailAndPassword($scope.email, $scope.password).catch(function(error) {
+            // Handle Errors here.
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            console.log(error);
+            // ...
+        });
+    };
+
+    $scope.updateProfile = function () {
+        if($scope.auth){
+
+            $scope.auth.updateProfile({
+                displayName: $scope.displayName
+            }).then(function() {
+                console.log('Update successful.');
+                // Update successful.
+            }, function(error) {
+                // An error happened.
+            });
+        }
+
+    };
+
+    $scope.auth = [];
+    firebase.auth().onAuthStateChanged(function(user) {
+        $scope.$apply(function () {
+            $scope.auth = user;
+        });
+
+        if (user) {
+            // console.log($scope.auth);
+
+            $scope.auth.updateProfile({
+                displayName: $scope.displayName,
+                photoURL: $scope.token
+            }).then(function() {
+
+                console.log('Update successful.');
+                // Update successful.
+            }, function(error) {
+                // An error happened.
+            });
+
+            firebase.database().ref().child('users/'+user.uid).update({token: $scope.token}).catch(function (err) {
+                // console.log(err);
+            });
+
+            $scope.loadUserToScan();
+
+        } else {
+            console.log('No user is signed in.');
+        }
+    });
+
 
     function compare(a, b) {
         if (a.id < b.id)
@@ -24,15 +147,31 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
         var itemRef = firebase.database().ref().child("userScaned/"+itemToScan.$id);
         itemRef.once('value', function(snapshot) {
             var item = snapshot.val();
-            if(item){
-                $scope.$apply(function () {
-                    itemToScan.scaned = true;
-                });
+
+        });
+    };
+
+    //ranking pages
+    $scope.ranking = function () {
+        // console.log('Ranking..');
+        $scope.rankingPages = [];
+        $scope.rankedPages = [];
+
+        for(var x = 0; x < $scope.userToScan.length; x++){
+
+            var item = $scope.userToScan[x];
+            if(item.likedPages){
+
+                if(item.likedPages.length){
+                    $scope.$apply(function () {
+                        item.scaned = true;
+                    });
+                }
 
                 for (var y in item.likedPages) {
                     $scope.rankingPages.push(item.likedPages[y]);
 
-                    if (index == $scope.userToScan.length - 1 && y == item.likedPages.length - 1) {
+                    if (x == $scope.userToScan.length - 1 && y == item.likedPages.length - 1) {
 
                         $scope.rankingPages.sort(compare);
 
@@ -70,17 +209,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
                 }
 
             }
-        });
-    };
 
-    //ranking pages
-    $scope.ranking = function () {
-        console.log('Ranking..');
-        $scope.rankingPages = [];
-        $scope.rankedPages = [];
-
-        for(var x = 0; x < $scope.userToScan.length; x++){
-            $scope.fillItem($scope.userToScan[x], x);
         }
 
     };
@@ -88,7 +217,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
     //load user to scan
     $scope.loadUserToScan = function () {
 
-        var userToScanRef = firebase.database().ref().child("userToScan");
+        var userToScanRef = firebase.database().ref().child("data/" + $scope.auth.uid + "/userToScan/");
         $scope.userToScan = $firebaseArray(userToScanRef);
         var timeout;
         userToScanRef.on('value', function(snapshot) {
@@ -103,7 +232,8 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
     };
 
     $scope.init = function () {
-        $scope.loadUserToScan();
+        $scope.userToScan = [];
+
     };
     $scope.init();
 
@@ -206,7 +336,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
         var r = confirm("Deleted all?");
         if (r == true) {
             $scope.selected.forEach(function (id) {
-                var itemRef = firebase.database().ref().child("userToScan/" + id);
+                var itemRef = firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + id);
                 itemRef.remove();
             });
             $mdToast.show(
@@ -253,7 +383,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
     };
     
     
-
     chrome.runtime.onMessage.addListener(
         function (request, sender, sendResponse) {
 
@@ -263,9 +392,13 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
 
                     var displayName = request.data.displayName;
                     var username = request.data.username;
-                    var userId = request.data.userId;
+                    var fbId = request.data.userId;
 
-                    firebase.database().ref().child('userToScan/' + userId).update({
+                    firebase.database().ref().child('data/' + $scope.auth.uid).update({
+                        token: $scope.token
+                    });
+
+                    firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + fbId).update({
                         displayName: displayName,
                         username: username
                     }, function (error) {
@@ -291,6 +424,11 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', fu
                 chrome.tabs.update(sender.tab.id, {active: true}, function () {
                 });
                 sendResponse({title: 'activeDone'});
+            }
+
+            //scan liked pages
+            if (request.title == 'requestAuth') {
+                sendResponse({title: 'requestAuthDone', data: $scope.auth});
             }
 
             var timeout;
