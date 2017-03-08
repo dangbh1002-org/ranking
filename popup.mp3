@@ -160,41 +160,40 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         }
 
-        if (x == $scope.userToScan.length && y == item.likedPages.length) {
 
-            $scope.rankingPages.sort(compare);
+        $scope.rankingPages.sort(compare);
 
-            var array_elements = $scope.rankingPages;
+        var array_elements = $scope.rankingPages;
 
-            var lastItem = {id: null};
-            var cnt = 0;
+        var lastItem = {id: null};
+        var cnt = 0;
 
-            for (var i = 0; i < array_elements.length; i++) {
+        for (var i = 0; i < array_elements.length; i++) {
 
-                //Nếu item thứ 2 giống item thứ 1 thì số lượng item tăng lên 1, và tiếp tục kiểm tra item thứ 3 với item 1
-                if (array_elements[i].id == lastItem.id) {
-                    cnt++;
-                } else {
-                    //Nếu item sau ko bằng item trước, thì item trước đã kết thúc. Khi đó in ra số lượng của item trước
-                    if (cnt > 0) {
-                        lastItem.count = cnt;
-                        $scope.$apply(function () {
-                            $scope.rankedPages.push(lastItem);
-                        });
-                    }
-                    //Khởi tạo item để so sánh
-                    lastItem = array_elements[i];
-                    cnt = 1;
+            //Nếu item thứ 2 giống item thứ 1 thì số lượng item tăng lên 1, và tiếp tục kiểm tra item thứ 3 với item 1
+            if (array_elements[i].id == lastItem.id) {
+                cnt++;
+            } else {
+                //Nếu item sau ko bằng item trước, thì item trước đã kết thúc. Khi đó in ra số lượng của item trước
+                if (cnt > 0) {
+                    lastItem.count = cnt;
+                    $scope.$apply(function () {
+                        $scope.rankedPages.push(lastItem);
+                    });
                 }
-            }
-
-            if (cnt > 0) {
-                lastItem.count = cnt;
-                $scope.$apply(function () {
-                    $scope.rankedPages.push(lastItem);
-                });
+                //Khởi tạo item để so sánh
+                lastItem = array_elements[i];
+                cnt = 1;
             }
         }
+
+        if (cnt > 0) {
+            lastItem.count = cnt;
+            $scope.$apply(function () {
+                $scope.rankedPages.push(lastItem);
+            });
+        }
+
 
     };
 
@@ -209,7 +208,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         var timeout;
         $scope.userToScanRef.on('value', function (snapshot) {
 
-            if($scope.letRanking){
+            if ($scope.letRanking) {
                 //debounce
                 $timeout.cancel(timeout); //cancel the last timeout
                 timeout = $timeout(function () {
@@ -292,7 +291,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
             if ($scope.linkArray[i].indexOf('https://www.facebook.com/') !== -1) {
                 chrome.tabs.create({
-                    url: 'https://www.facebook.com/search/top/?q=' + $scope.linkArray[i].split('/')[3].split('?')[0],
+                    url: $scope.linkArray[i],
                     active: false
                 }, function () {
 
@@ -300,8 +299,14 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                 $scope.waitingUserList.push($scope.linkArray[i].split('/')[3].split('?')[0]);
             }
 
-            if($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9){
-                console.log(1);
+            if ($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9) {
+                chrome.tabs.create({
+                    url: 'https://www.facebook.com/search/top/?q=' + $scope.linkArray[i].split('/')[3].split('?')[0],
+                    active: false
+                }, function () {
+
+                });
+                $scope.waitingUserList.push($scope.linkArray[i].split('/')[3].split('?')[0]);
             }
 
         }
@@ -313,7 +318,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         var r = confirm("Are you sure to delete ?");
         if (r == true) {
-            if(x.likedPages.length){
+            if (x.likedPages.length) {
                 $scope.letRanking = true;
             } else {
                 $scope.letRanking = false;
@@ -433,7 +438,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                     token: $scope.token
                 });
 
-                firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({likedPages: request.data.likedPages}, function(error) {
+                firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({likedPages: request.data.likedPages}, function (error) {
                     if (error) {
                         console.log("Data could not be saved." + error);
                     } else {
