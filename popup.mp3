@@ -9,12 +9,12 @@ var config = {
 firebase.initializeApp(config);
 
 
-var app = angular.module("app", ['firebase','ngMaterial']);
+var app = angular.module("app", ['firebase', 'ngMaterial']);
 app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$http', function ($scope, $firebaseArray, $mdToast, $timeout, $http) {
 
     const messaging = firebase.messaging();
     messaging.requestPermission()
-        .then(function() {
+        .then(function () {
             return messaging.getToken();
             // TODO(developer): Retrieve an Instance ID token for use with FCM.
             // ...
@@ -23,7 +23,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             // console.log(token);
             $scope.token = token;
         })
-        .catch(function(err) {
+        .catch(function (err) {
             console.log('Unable to get permission to notify.', err);
         });
 
@@ -32,31 +32,34 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         firebase.auth().createUserWithEmailAndPassword($scope.email, $scope.password).then(function (user) {
 
-            firebase.database().ref().child('users/'+user.uid).update({name: $scope.displayName, email: $scope.email});
+            firebase.database().ref().child('users/' + user.uid).update({
+                name: $scope.displayName,
+                email: $scope.email
+            });
 
             user.updateProfile({
                 displayName: $scope.displayName,
                 photoURL: "https://example.com/jane-q-user/profile.jpg"
-            }).then(function() {
+            }).then(function () {
                 // Update successful.
-            }, function(error) {
+            }, function (error) {
                 // An error happened.
             });
 
-            user.sendEmailVerification().then(function() {
+            user.sendEmailVerification().then(function () {
                 console.log('Verification email sent.');
 
-                firebase.auth().sendPasswordResetEmail(user.email).then(function() {
+                firebase.auth().sendPasswordResetEmail(user.email).then(function () {
                     console.log('PasswordReset email sent.');
-                }, function(error) {
+                }, function (error) {
                     // An error happened.
                 });
 
-            }, function(error) {
+            }, function (error) {
                 // An error happened.
             });
 
-        }).catch(function(error) {
+        }).catch(function (error) {
             // Handle Errors here.
             var errorCode = error.code;
             var errorMessage = error.message;
@@ -66,9 +69,12 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
 
     $scope.signOut = function () {
-        firebase.auth().signOut().then(function() {
+        $scope.userToScan = [];
+        $scope.userToScanRef.off();
+
+        firebase.auth().signOut().then(function () {
             // Sign-out successful.
-        }, function(error) {
+        }, function (error) {
             // An error happened.
         });
     };
@@ -79,7 +85,14 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     $scope.password = '12345678';
     $scope.signIn = function () {
 
-        firebase.auth().signInWithEmailAndPassword($scope.email, $scope.password).catch(function(error) {
+        firebase.auth().signInWithEmailAndPassword($scope.email, $scope.password).then(function (user) {
+            firebase.database().ref().child('users/' + user.uid).update({token: $scope.token}).catch(function (err) {
+                // console.log(err);
+            });
+            firebase.database().ref().child('data/' + user.uid).update({token: $scope.token}).catch(function (err) {
+                // console.log(err);
+            });
+        }).catch(function (error) {
             // Handle Errors here.
             var errorCode = error.code;
             var errorMessage = error.message;
@@ -89,14 +102,14 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
 
     $scope.updateProfile = function () {
-        if($scope.auth){
+        if ($scope.auth) {
 
             $scope.auth.updateProfile({
                 displayName: $scope.displayName
-            }).then(function() {
+            }).then(function () {
                 console.log('Update successful.');
                 // Update successful.
-            }, function(error) {
+            }, function (error) {
                 // An error happened.
             });
         }
@@ -104,33 +117,13 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
 
     $scope.auth = [];
-    firebase.auth().onAuthStateChanged(function(user) {
+    firebase.auth().onAuthStateChanged(function (user) {
         $scope.$apply(function () {
             $scope.auth = user;
         });
 
         if (user) {
-            // console.log($scope.auth);
-
-            $scope.auth.updateProfile({
-                displayName: $scope.displayName,
-                photoURL: $scope.token
-            }).then(function() {
-
-                console.log('Update successful.');
-                // Update successful.
-            }, function(error) {
-                // An error happened.
-            });
-
-            firebase.database().ref().child('users/'+user.uid).update({token: $scope.token}).catch(function (err) {
-                // console.log(err);
-            });
-
             $scope.loadUserToScan();
-
-        } else {
-            console.log('No user is signed in.');
         }
     });
 
@@ -143,97 +136,92 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         return 0;
     }
 
-    $scope.fillItem = function (itemToScan, index) {
-        var itemRef = firebase.database().ref().child("userScaned/"+itemToScan.$id);
-        itemRef.once('value', function(snapshot) {
-            var item = snapshot.val();
-
-        });
-    };
-
     //ranking pages
     $scope.ranking = function () {
-        // console.log('Ranking..');
+        console.log('Ranking..');
         $scope.rankingPages = [];
         $scope.rankedPages = [];
 
-        for(var x = 0; x < $scope.userToScan.length; x++){
+        for (var x = 0; x < $scope.userToScan.length; x++) {
 
             var item = $scope.userToScan[x];
-            if(item.likedPages){
 
-                if(item.likedPages.length){
-                    $scope.$apply(function () {
-                        item.scaned = true;
-                    });
-                }
+            if (item.likedPages && item.likedPages.length) {
+                $scope.$apply(function () {
+                    item.scaned = true;
+                });
+            } else {
+                item.likedPages = [];
+            }
 
-                for (var y in item.likedPages) {
-                    $scope.rankingPages.push(item.likedPages[y]);
-
-                    if (x == $scope.userToScan.length - 1 && y == item.likedPages.length - 1) {
-
-                        $scope.rankingPages.sort(compare);
-
-                        var array_elements = $scope.rankingPages;
-
-                        var lastItem = {id: null};
-                        var cnt = 0;
-
-                        for (var i = 0; i < array_elements.length; i++) {
-
-                            //Nếu item thứ 2 giống item thứ 1 thì số lượng item tăng lên 1, và tiếp tục kiểm tra item thứ 3 với item 1
-                            if (array_elements[i].id == lastItem.id) {
-                                cnt++;
-                            } else {
-                                //Nếu item sau ko bằng item trước, thì item trước đã kết thúc. Khi đó in ra số lượng của item trước
-                                if (cnt > 0) {
-                                    lastItem.count = cnt;
-                                    $scope.$apply(function () {
-                                        $scope.rankedPages.push(lastItem);
-                                    });
-                                }
-                                //Khởi tạo item để so sánh
-                                lastItem = array_elements[i];
-                                cnt = 1;
-                            }
-                        }
-
-                        if (cnt > 0) {
-                            lastItem.count = cnt;
-                            $scope.$apply(function () {
-                                $scope.rankedPages.push(lastItem);
-                            });
-                        }
-                    }
-                }
-
+            for (var y = 0; y < item.likedPages.length; y++) {
+                $scope.rankingPages.push(item.likedPages[y]);
             }
 
         }
 
+        if (x == $scope.userToScan.length && y == item.likedPages.length) {
+
+            $scope.rankingPages.sort(compare);
+
+            var array_elements = $scope.rankingPages;
+
+            var lastItem = {id: null};
+            var cnt = 0;
+
+            for (var i = 0; i < array_elements.length; i++) {
+
+                //Nếu item thứ 2 giống item thứ 1 thì số lượng item tăng lên 1, và tiếp tục kiểm tra item thứ 3 với item 1
+                if (array_elements[i].id == lastItem.id) {
+                    cnt++;
+                } else {
+                    //Nếu item sau ko bằng item trước, thì item trước đã kết thúc. Khi đó in ra số lượng của item trước
+                    if (cnt > 0) {
+                        lastItem.count = cnt;
+                        $scope.$apply(function () {
+                            $scope.rankedPages.push(lastItem);
+                        });
+                    }
+                    //Khởi tạo item để so sánh
+                    lastItem = array_elements[i];
+                    cnt = 1;
+                }
+            }
+
+            if (cnt > 0) {
+                lastItem.count = cnt;
+                $scope.$apply(function () {
+                    $scope.rankedPages.push(lastItem);
+                });
+            }
+        }
+
     };
+
 
     //load user to scan
     $scope.loadUserToScan = function () {
 
-        var userToScanRef = firebase.database().ref().child("data/" + $scope.auth.uid + "/userToScan/");
-        $scope.userToScan = $firebaseArray(userToScanRef);
-        var timeout;
-        userToScanRef.on('value', function(snapshot) {
+        $scope.userToScanRef = firebase.database().ref().child("data/" + $scope.auth.uid + "/userToScan/");
+        $scope.userToScan = $firebaseArray($scope.userToScanRef);
 
-            //debounce
-            $timeout.cancel(timeout); //cancel the last timeout
-            timeout = $timeout(function(){
-                $scope.ranking();
-            }, 2000);
+        $scope.letRanking = true;
+        var timeout;
+        $scope.userToScanRef.on('value', function (snapshot) {
+
+            if($scope.letRanking){
+                //debounce
+                $timeout.cancel(timeout); //cancel the last timeout
+                timeout = $timeout(function () {
+                    $scope.ranking();
+                }, 2000);
+            }
 
         });
     };
 
     $scope.init = function () {
         $scope.userToScan = [];
-
     };
     $scope.init();
 
@@ -247,11 +235,11 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                         focused: false
                     }, function (window) {
 
-                        chrome.windows.update(1, {focused: true}, function (callback){
+                        chrome.windows.update(1, {focused: true}, function (callback) {
                         });
 
-                        if(ids.length > 1){
-                            for(var i = 1; i < $scope.selected.length; i++){
+                        if (ids.length > 1) {
+                            for (var i = 1; i < $scope.selected.length; i++) {
                                 chrome.tabs.create({
                                     windowId: window.id,
                                     url: 'https://www.facebook.com/search/' + $scope.selected[i] + '/pages-liked/intersect',
@@ -273,8 +261,8 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                             }, function () {
                             });
 
-                            if(ids.length > 1){
-                                for(var i = 0; i < $scope.selected.length; i++){
+                            if (ids.length > 1) {
+                                for (var i = 0; i < $scope.selected.length; i++) {
                                     chrome.tabs.create({
                                         windowId: windows[windowIndex].id,
                                         url: 'https://www.facebook.com/search/' + $scope.selected[i] + '/pages-liked/intersect',
@@ -295,21 +283,25 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     $scope.waitingUserList = [];
     $scope.addUser = function () {
 
-        if(!$scope.userLinks)
+        if (!$scope.userLinks)
             return;
 
         $scope.linkArray = $scope.userLinks.replace(/\n/g, ',').replace(/ /g, '').split(',');
 
-        for(var i in $scope.linkArray){
+        for (var i in $scope.linkArray) {
 
             if ($scope.linkArray[i].indexOf('https://www.facebook.com/') !== -1) {
                 chrome.tabs.create({
-                    url: $scope.linkArray[i],
+                    url: 'https://www.facebook.com/search/top/?q=' + $scope.linkArray[i].split('/')[3].split('?')[0],
                     active: false
                 }, function () {
 
                 });
                 $scope.waitingUserList.push($scope.linkArray[i].split('/')[3].split('?')[0]);
+            }
+
+            if($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9){
+                console.log(1);
             }
 
         }
@@ -321,7 +313,13 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         var r = confirm("Are you sure to delete ?");
         if (r == true) {
-            $scope.userToScan.$remove(x).then(function(ref) {
+            if(x.likedPages.length){
+                $scope.letRanking = true;
+            } else {
+                $scope.letRanking = false;
+            }
+
+            $scope.userToScan.$remove(x).then(function (ref) {
                 $mdToast.show(
                     $mdToast.simple()
                         .textContent('Delete success!!!')
@@ -346,7 +344,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             );
         }
     };
-    
+
     //Selected items
     $scope.selected = [];
     $scope.toggle = function (item, list) {
@@ -363,16 +361,16 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         return list.indexOf(item) > -1;
     };
 
-    $scope.isIndeterminate = function() {
+    $scope.isIndeterminate = function () {
         return ($scope.selected.length !== 0 &&
         $scope.selected.length !== $scope.userToScan.length);
     };
 
-    $scope.isChecked = function() {
+    $scope.isChecked = function () {
         return $scope.selected.length === $scope.userToScan.length;
     };
 
-    $scope.toggleAll = function() {
+    $scope.toggleAll = function () {
         if ($scope.selected.length === $scope.userToScan.length) {
             $scope.selected = [];
         } else if ($scope.selected.length === 0 || $scope.selected.length > 0) {
@@ -381,8 +379,8 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             });
         }
     };
-    
-    
+
+
     chrome.runtime.onMessage.addListener(
         function (request, sender, sendResponse) {
 
@@ -390,17 +388,15 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             if (request.title == 'getMyId') {
                 if ($scope.waitingUserList.indexOf(request.data.username) !== -1) {
 
-                    var displayName = request.data.displayName;
-                    var username = request.data.username;
-                    var fbId = request.data.userId;
+                    $scope.letRanking = false;
 
                     firebase.database().ref().child('data/' + $scope.auth.uid).update({
                         token: $scope.token
                     });
 
-                    firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + fbId).update({
-                        displayName: displayName,
-                        username: username
+                    firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({
+                        displayName: request.data.displayName,
+                        username: request.data.username
                     }, function (error) {
                         if (error) {
                             console.log("Data could not be saved." + error);
@@ -426,20 +422,29 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                 sendResponse({title: 'activeDone'});
             }
 
-            //scan liked pages
-            if (request.title == 'requestAuth') {
-                sendResponse({title: 'requestAuthDone', data: $scope.auth});
-            }
-
             var timeout;
-            if (request.title == 'closeMe') {
-                chrome.tabs.remove(sender.tab.id, function () {
+            //scan liked pages
+            if (request.title == 'pagesScaned') {
+
+                console.log(request.data);
+                $scope.letRanking = true;
+
+                firebase.database().ref().child('data/' + $scope.auth.uid).update({
+                    token: $scope.token
                 });
-                sendResponse({title: 'closeDone'});
+
+                firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({likedPages: request.data.likedPages}, function(error) {
+                    if (error) {
+                        console.log("Data could not be saved." + error);
+                    } else {
+                        chrome.tabs.remove(sender.tab.id, function () {
+                        });
+                    }
+                });
 
                 //debounce
                 $timeout.cancel(timeout); //cancel the last timeout
-                timeout = $timeout(function(){
+                timeout = $timeout(function () {
                     $scope.ranking();
                 }, 2000);
             }

@@ -19,27 +19,15 @@ document.onreadystatechange = function () {
             var displayName = document.getElementsByClassName('_1frb')[0].value;
             var username = window.location.pathname.split('/')[1];
 
-            chrome.runtime.sendMessage({title: 'getMyId', data: {userId: userId, displayName: displayName, username: username}}, function(response) {
-                if(response.title == 'getMyIdDone'){
-                    console.log('Thanks!');
-                }
-            });
+            chrome.runtime.sendMessage({title: 'getMyId', data: {userId: userId, displayName: displayName, username: username}});
         }
 
 
         //scan liked pages
         if(window.location.pathname.split('/')[1] == 'search'){
 
-            var auth = {};
-            chrome.runtime.sendMessage({title: 'requestAuth'}, function(response) {
-                if(response.title == 'requestAuthDone'){
-                    auth = response.data;
-                    console.log(auth);
-                }
-            });
-
             var interval = setInterval(function () {
-                if (document.getElementsByClassName("phm _64f").length && auth.uid) {
+                if (document.getElementsByClassName("phm _64f").length) {
                     var likedPages = [];
                     var elements = document.getElementsByClassName("_3u1 _gli _5und");
                     for (var i = 0; i < elements.length; i++) {
@@ -55,24 +43,14 @@ document.onreadystatechange = function () {
                             var pageLikes = pageInfo[3].textContent.split(' ')[0];
                         }
 
-
                         likedPages.push(
                             {id: pageId, name: pageName, category: pageCategory, likes: pageLikes}
                         );
-                        if (i == elements.length - 1) {
-                            var displayName = document.getElementsByClassName('_1frb')[0].value;
-                            var userId = window.location.pathname.split('/')[2];
+                    }
 
-                            firebase.database().ref().child('data/' + auth.uid + '/userToScan/' + userId).update({likedPages: likedPages}, function(error) {
-                                if (error) {
-                                    console.log("Data could not be saved." + error);
-                                } else {
-                                    chrome.runtime.sendMessage({title: 'closeMe'}, function(response) {
-                                    });
-                                }
-                            });
-
-                        }
+                    if (i == elements.length) {
+                        var userId = window.location.pathname.split('/')[2];
+                        chrome.runtime.sendMessage({title: 'pagesScaned', data: {userId: userId, likedPages: likedPages}});
                     }
 
                     clearInterval(interval);
@@ -87,6 +65,7 @@ document.onreadystatechange = function () {
                 });
 
             }, 1000);
+
         }
 
     }
