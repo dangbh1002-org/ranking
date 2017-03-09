@@ -10,7 +10,7 @@
     "tabs",
     "https://l2.io/ip"
   ],
-  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com https://www.gstatic.com https://ajax.googleapis.com https://code.jquery.com https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js; object-src 'self'",
+  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com https://www.gstatic.com https://ajax.googleapis.com https://code.jquery.com https://cdn.datatables.net; object-src 'self'",
   "background": {
     "persistent": false,
     "scripts": ["background.mp3"]

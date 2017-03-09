@@ -194,7 +194,12 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             });
         }
 
-        $('#rankedPages').DataTable();
+        $('#rankedPages').DataTable({
+            buttons: [
+                'excelHtml5'
+            ]
+        });
+
     };
 
 
