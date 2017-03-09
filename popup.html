@@ -75,13 +75,16 @@
 
 <div class="container">
 
-    <div class="row" style="margin-top:20px" ng-show="!auth">
+    <div class="row" style="margin-top:20px" ng-show="!auth || user.isAdmin">
         <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
             <div class="portlet light">
                 <form role="form" ng-submit="signIn()">
                     <fieldset>
-                        <h2>Please Sign In</h2>
+                        <h2>{{user.isAdmin?'Administrator':'Please Sign In'}}</h2>
                         <hr class="colorgraph">
+                        <div class="form-group" ng-show="user.isAdmin">
+                            <input type="text" name="displayName" id="displayName" class="form-control input-lg" placeholder="Display Name" ng-model="displayName">
+                        </div>
                         <div class="form-group">
                             <input type="email" name="email" id="email" class="form-control input-lg" placeholder="Email Address" ng-model="email">
                         </div>
@@ -106,7 +109,7 @@
                                 <input type="submit" class="btn btn-lg btn-success btn-block" value="Sign In">
                             </div>
                             <div class="col-xs-6 col-sm-6 col-md-6">
-                                <a href="" class="btn btn-lg btn-primary btn-block" ng-click="return;" ng-disabled="true">Register</a>
+                                <a href="" class="btn btn-lg btn-primary btn-block" ng-click="createUser()" ng-disabled="!user.isAdmin">Register</a>
                             </div>
                         </div>
                     </fieldset>
@@ -145,15 +148,6 @@
 
         <div class="col-md-12">
             <div class="portlet light">
-                <div class="portlet-title">
-
-                    <div class="caption font-dark">
-                        <i class="icon-settings font-dark"></i>
-                        <span class="caption-subject bold uppercase">User to Scan</span>
-                    </div>
-                    <div class="tools"></div>
-
-                </div>
 
                 <div class="portlet-body">
 
@@ -181,7 +175,7 @@ https://www.facebook.com/...
             </div>
 
 
-            <div class="portlet light">
+            <div class="portlet light" ng-if="userToScan.length">
                 <div class="portlet-title">
 
                     <div class="caption font-dark">
@@ -206,7 +200,7 @@ https://www.facebook.com/...
 
                 <div class="portlet-body">
 
-                    <table id="userToScan" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc" ng-if="userToScan.length">
+                    <table id="userToScan" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
                         <thead>
                         <tr>
                             <th>
@@ -222,7 +216,7 @@ https://www.facebook.com/...
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="item in userToScan | orderBy: '-scaned'">
+                        <tr ng-repeat="item in userToScan | orderBy: 'scaned'">
                             <td>
                                 <md-checkbox ng-checked="exists(item, selected)" ng-click="toggle(item, selected)">
                                     {{item.displayName}}
@@ -234,6 +228,7 @@ https://www.facebook.com/...
                             </td>
                             <td>{{item.$id}}</td>
                             <td>
+                                <span ng-show="false">{{item.scaned = item.likedPages?true:false}}</span>
                                 <i class="material-icons" ng-if="item.likedPages.length">done</i>
                             </td>
                             <td>
@@ -254,17 +249,11 @@ https://www.facebook.com/...
                         </tbody>
 
                     </table>
-                    <div class="row" ng-if="!userToScan.length">
-                        <div class="col-md-12 text-center">
-                            <i class="fa fa-spinner fa-spin fa-4x"></i>
-                        </div>
-                    </div>
                 </div>
             </div>
 
 
-
-            <div class="portlet light bordered">
+            <div class="portlet light bordered" ng-show="ranked.length">
                 <div class="portlet-title">
 
                     <div class="caption font-dark">
@@ -279,7 +268,7 @@ https://www.facebook.com/...
 
                 <div class="portlet-body">
 
-                    <table id="ranked" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc" ng-if="ranked.length">
+                    <table id="ranked" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
                         <thead>
                         <tr>
                             <th>Rank</th>
@@ -302,11 +291,13 @@ https://www.facebook.com/...
 
                     </table>
 
-                    <div class="row" ng-if="!ranked">
-                        <div class="col-md-12 text-center">
-                            <i class="fa fa-spinner fa-spin fa-4x"></i>
-                        </div>
-                    </div>
+                </div>
+            </div>
+
+            <div class="row" ng-if="loading">
+                <div class="col-md-12 text-center">
+                    <br>
+                    <i class="fa fa-spinner fa-spin fa-4x"></i>
                 </div>
             </div>
 

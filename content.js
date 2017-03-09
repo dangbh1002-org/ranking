@@ -41,6 +41,7 @@ $(document).ready(function() {
     //scan liked pages
     if (window.location.pathname.indexOf('/pages-liked/intersect') !== -1) {
 
+
         var interval = setInterval(function () {
             if (document.getElementsByClassName("_2jre").length) {
                 var likedPages = [];
@@ -65,6 +66,10 @@ $(document).ready(function() {
                 }
 
                 clearInterval(interval);
+            }
+
+            if (document.getElementsByClassName("_1s_y").length) {
+                chrome.runtime.sendMessage({title: 'pagesScaned', data: {userId: userId, likedPages: []}});
             }
 
             window.scrollTo(0, document.body.scrollHeight);

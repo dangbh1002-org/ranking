@@ -28,7 +28,6 @@ app.filter('unique', function() {
 
 app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$http', function ($scope, $firebaseArray, $mdToast, $timeout, $http) {
 
-
     $scope.getCount = function(i) {
         var iCount = iCount || 0;
         for (var j = 0; j < $scope.ranked.length; j++) {
@@ -39,21 +38,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         return iCount;
     };
 
-    const messaging = firebase.messaging();
-    messaging.requestPermission()
-        .then(function () {
-            return messaging.getToken();
-            // TODO(developer): Retrieve an Instance ID token for use with FCM.
-            // ...
-        })
-        .then(function (token) {
-            // console.log(token);
-            $scope.token = token;
-        })
-        .catch(function (err) {
-            console.log('Unable to get permission to notify.', err);
-        });
-
     $scope.resetPassword = function () {
         firebase.auth().sendPasswordResetEmail($scope.email).then(function () {
             $scope.$apply(function () {
@@ -61,17 +45,32 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                 $scope.loginMessage = 'Reset password email sent.';
             });
         }, function (error) {
+            $scope.$apply(function () {
+                $scope.loginError = true;
+                $scope.loginMessage = error.message;
+            });
             // An error happened.
         });
     };
 
     $scope.createUser = function () {
 
+        if(!$scope.user.isAdmin){
+            return;
+        }
+
         firebase.auth().createUserWithEmailAndPassword($scope.email, $scope.password).then(function (user) {
 
             firebase.database().ref().child('users/' + user.uid).update({
                 name: $scope.displayName,
                 email: $scope.email
+            });
+
+            firebase.database().ref().child('users/' + user.uid).update({token: $scope.token}).catch(function (err) {
+                // console.log(err);
+            });
+            firebase.database().ref().child('data/' + user.uid).update({token: $scope.token}).catch(function (err) {
+                // console.log(err);
             });
 
             user.updateProfile({
@@ -107,9 +106,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
 
     $scope.signOut = function () {
-        $scope.userToScan = [];
-        $scope.ranked = [];
-        $scope.userToScanRef.off();
 
         firebase.auth().signOut().then(function () {
             // Sign-out successful.
@@ -119,10 +115,9 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
 
 
-    $scope.displayName = 'Brian Dhang';
-    $scope.email = 'dangbh1002@gmail.com';
-    $scope.password = '12345678';
     $scope.signIn = function () {
+
+        $scope.loading = true;
 
         firebase.auth().signInWithEmailAndPassword($scope.email, $scope.password).then(function (user) {
             firebase.database().ref().child('users/' + user.uid).update({token: $scope.token}).catch(function (err) {
@@ -142,8 +137,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             });
 
             // ...
-        }, {
-            remember: "sessionOnly"
         });
     };
 
@@ -162,31 +155,134 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
     };
 
-    $scope.auth = [];
-    firebase.auth().onAuthStateChanged(function (user) {
-        $scope.$apply(function () {
-            $scope.auth = user;
+    $scope.init = function () {
+
+        const messaging = firebase.messaging();
+        messaging.requestPermission()
+            .then(function () {
+                return messaging.getToken();
+                // TODO(developer): Retrieve an Instance ID token for use with FCM.
+                // ...
+            })
+            .then(function (token) {
+                // console.log(token);
+                $scope.token = token;
+            })
+            .catch(function (err) {
+                console.log('Unable to get permission to notify.', err);
+            });
+
+        function compare(a, b) {
+            if (a.id < b.id)
+                return -1;
+            if (a.id > b.id)
+                return 1;
+            return 0;
+        }
+
+        chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+
+            //getUserId
+            if (request.title == 'getMyId') {
+                if ($scope.searchingUserList.indexOf(request.data.searching) !== -1) {
+
+                    $scope.letRanking = false;
+
+                    firebase.database().ref().child('data/' + $scope.auth.uid).update({
+                        token: $scope.token
+                    });
+
+                    firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({
+                        displayName: request.data.displayName,
+                        username: request.data.username
+                    }, function (error) {
+                        if (error) {
+                            console.log("Data could not be saved." + error);
+                        } else {
+                            chrome.tabs.remove(sender.tab.id, function () {
+                            });
+
+                            $scope.$apply(function () {
+                                $scope.userLinks = '';
+                            });
+
+                        }
+                    });
+                }
+
+                sendResponse({title: 'getMyIdDone'});
+            }
+
+            //scan liked pages
+            if (request.title == 'activeMe') {
+                chrome.tabs.update(sender.tab.id, {active: true}, function () {
+                });
+                sendResponse({title: 'activeDone'});
+            }
+
+            var timeout;
+            //scan liked pages
+            if (request.title == 'pagesScaned') {
+
+                $scope.letRanking = true;
+
+                firebase.database().ref().child('data/' + $scope.auth.uid).update({
+                    token: $scope.token
+                });
+
+                firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({likedPages: request.data.likedPages}, function (error) {
+                    if (error) {
+                        console.log("Data could not be saved." + error);
+                    } else {
+                        chrome.tabs.remove(sender.tab.id, function () {
+                        });
+                    }
+                });
+
+            }
+
         });
 
-        if (user) {
-            $scope.loadUserToScan();
-        }
-    });
+        firebase.auth().onAuthStateChanged(function (auth) {
+            $scope.auth = [];
+
+            $scope.$apply(function () {
+                $scope.auth = auth;
+            });
+
+            $scope.userToScan = [];
+            $scope.tabled = false;
+            $("#ranked").DataTable().clear().destroy();
+            $scope.ranked = [];
+            if($scope.userToScanRef){
+                $scope.userToScanRef.off();
+            }
 
 
-    function compare(a, b) {
-        if (a.id < b.id)
-            return -1;
-        if (a.id > b.id)
-            return 1;
-        return 0;
-    }
+            if (auth) {
 
-    $scope.ranked = [];
+                var userRef = firebase.database().ref().child('users/'+$scope.auth.uid);
+                userRef.on('value', function (snapshot) {
+                    $scope.user = snapshot.val();
+                });
+
+                $scope.loadUserToScan();
+            } else {
+                $scope.user = [];
+            }
+        });
+
+        $scope.loading = true;
+        $scope.searchingUserList = [];
+        $scope.selected = [];
+        $scope.ranked = [];
+    };
+    $scope.init();
+
+
     //ranking pages
     $scope.ranking = function () {
-        console.log('Ranking..');
-
+        $scope.ranked = [];
         for (var x = 0; x < $scope.userToScan.length; x++) {
             $scope.ranked = $scope.userToScan[x].likedPages? $scope.ranked.concat($scope.userToScan[x].likedPages):$scope.ranked;
 
@@ -196,7 +292,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             $scope.tabled = true;
             setTimeout(function () {
 
-                $('#ranked').dataTable({
+                $('#ranked').DataTable({
                     pagingType: "full_numbers",
                     buttons: [
                         { extend: 'csv', className: 'btn purple btn-outline', filename: 'Ranked'},
@@ -205,8 +301,9 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                     ],
                     "dom": "<'row' <'col-md-12'B>><'row'<'col-md-6 col-sm-12'l><'col-md-6 col-sm-12'f>r><'table-scrollable't><'row'<'col-md-5 col-sm-12'i><'col-md-7 col-sm-12'p>>"
                 });
-            });
+            }, 100);
         }
+        $scope.loading = false;
 
     };
 
@@ -231,11 +328,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         });
     };
-
-    $scope.init = function () {
-        $scope.userToScan = [];
-    };
-    $scope.init();
 
     $scope.scanUser = function (items, scaned) {
 
@@ -314,11 +406,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         });
     };
 
-
-    $scope.searchingUserList = [];
     $scope.addUser = function () {
-
-        console.log($scope.userLinks);
 
         if (!$scope.userLinks)
             return;
@@ -403,7 +491,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
 
     //Selected items
-    $scope.selected = [];
     $scope.toggle = function (item, list) {
 
         for(var i = 0; i < list.length; i++){
@@ -444,70 +531,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             });
         }
     };
-
-    chrome.runtime.onMessage.addListener(
-        function (request, sender, sendResponse) {
-
-            //getUserId
-            if (request.title == 'getMyId') {
-                if ($scope.searchingUserList.indexOf(request.data.searching) !== -1) {
-
-                    $scope.letRanking = false;
-
-                    firebase.database().ref().child('data/' + $scope.auth.uid).update({
-                        token: $scope.token
-                    });
-
-                    firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({
-                        displayName: request.data.displayName,
-                        username: request.data.username
-                    }, function (error) {
-                        if (error) {
-                            console.log("Data could not be saved." + error);
-                        } else {
-                            chrome.tabs.remove(sender.tab.id, function () {
-                            });
-
-                            $scope.$apply(function () {
-                                $scope.userLinks = '';
-                            });
-
-                        }
-                    });
-                }
-
-                sendResponse({title: 'getMyIdDone'});
-            }
-
-            //scan liked pages
-            if (request.title == 'activeMe') {
-                chrome.tabs.update(sender.tab.id, {active: true}, function () {
-                });
-                sendResponse({title: 'activeDone'});
-            }
-
-            var timeout;
-            //scan liked pages
-            if (request.title == 'pagesScaned') {
-
-                $scope.letRanking = true;
-
-                firebase.database().ref().child('data/' + $scope.auth.uid).update({
-                    token: $scope.token
-                });
-
-                firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({likedPages: request.data.likedPages}, function (error) {
-                    if (error) {
-                        console.log("Data could not be saved." + error);
-                    } else {
-                        chrome.tabs.remove(sender.tab.id, function () {
-                        });
-                    }
-                });
-
-            }
-
-        });
 
 
 }]);
