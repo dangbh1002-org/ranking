@@ -11,8 +11,10 @@
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/autofill/2.1.3/css/autoFill.dataTables.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.2.4/css/buttons.dataTables.min.css">
+    <link rel="stylesheet" href="assets/components-md.min.css">
+
+    <!--<link rel="stylesheet" href="https://cdn.datatables.net/autofill/2.1.3/css/autoFill.dataTables.min.css">-->
+    <!--<link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.2.4/css/buttons.dataTables.min.css">-->
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
@@ -28,49 +30,88 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/autofill/2.1.3/js/dataTables.autoFill.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.2.4/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/1.2.4/js/buttons.html5.min.js"></script>
+
+    <!--<script src="https://cdn.datatables.net/autofill/2.1.3/js/dataTables.autoFill.min.js"></script>-->
+    <!--<script src="https://cdn.datatables.net/buttons/1.2.4/js/dataTables.buttons.min.js"></script>-->
+    <!--<script src="https://cdn.datatables.net/buttons/1.2.4/js/buttons.html5.min.js"></script>-->
 
     <!-- Angular Material Library -->
     <script src="assets/angular-material.min.js"></script>
-    <script src="assets/angular-debounce.min.js"></script>
 
     <script src="popup.mp3"></script>
 
+    <style>
+        .colorgraph {
+            height: 5px;
+            border-top: 0;
+            background: #c4e17f;
+            border-radius: 5px;
+            background-image: -webkit-linear-gradient(left, #c4e17f, #c4e17f 12.5%, #f7fdca 12.5%, #f7fdca 25%, #fecf71 25%, #fecf71 37.5%, #f0776c 37.5%, #f0776c 50%, #db9dbe 50%, #db9dbe 62.5%, #c49cde 62.5%, #c49cde 75%, #669ae1 75%, #669ae1 87.5%, #62c2e4 87.5%, #62c2e4);
+            background-image: -moz-linear-gradient(left, #c4e17f, #c4e17f 12.5%, #f7fdca 12.5%, #f7fdca 25%, #fecf71 25%, #fecf71 37.5%, #f0776c 37.5%, #f0776c 50%, #db9dbe 50%, #db9dbe 62.5%, #c49cde 62.5%, #c49cde 75%, #669ae1 75%, #669ae1 87.5%, #62c2e4 87.5%, #62c2e4);
+            background-image: -o-linear-gradient(left, #c4e17f, #c4e17f 12.5%, #f7fdca 12.5%, #f7fdca 25%, #fecf71 25%, #fecf71 37.5%, #f0776c 37.5%, #f0776c 50%, #db9dbe 50%, #db9dbe 62.5%, #c49cde 62.5%, #c49cde 75%, #669ae1 75%, #669ae1 87.5%, #62c2e4 87.5%, #62c2e4);
+            background-image: linear-gradient(to right, #c4e17f, #c4e17f 12.5%, #f7fdca 12.5%, #f7fdca 25%, #fecf71 25%, #fecf71 37.5%, #f0776c 37.5%, #f0776c 50%, #db9dbe 50%, #db9dbe 62.5%, #c49cde 62.5%, #c49cde 75%, #669ae1 75%, #669ae1 87.5%, #62c2e4 87.5%, #62c2e4);
+        }
+    </style>
 </head>
 <body ng-controller="myCtrl">
 
+
 <div class="container">
-    <div class="row">
 
-
-        <div class="col-md-12">
-            <div>
-                <p>Email: {{auth.email}}</p>
-                <p>Display name: {{auth.displayName}}</p>
-
-            </div>
-
-            <div ng-show="!auth">
-                <input type="text" class="form-control" ng-model="displayName" placeholder="Display name">
-                <input type="text" class="form-control" ng-model="email" placeholder="Email">
-                <input type="text" class="form-control" ng-model="password" placeholder="Password">
-            </div>
-
-            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="createUser()">
-                Create user
-            </md-button>
-            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="updateProfile()">
-                Update profile
-            </md-button>
-            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="signIn()">
-                Sign in
-            </md-button>
-            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="signOut()">
-                Sign out
-            </md-button>
+    <div class="row" style="margin-top:20px" ng-show="!auth">
+        <div class="col-xs-12 col-sm-8 col-md-6 col-sm-offset-2 col-md-offset-3">
+            <form role="form" ng-submit="signIn()">
+                <fieldset>
+                    <h2>Please Sign In</h2>
+                    <hr class="colorgraph">
+                    <div class="form-group">
+                        <input type="email" name="email" id="email" class="form-control input-lg" placeholder="Email Address" ng-model="email">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="password" id="password" class="form-control input-lg" placeholder="Password" ng-model="password">
+                    </div>
+                    <span class="button-checkbox">
+					<button type="button" class="btn" data-color="info">Remember Me</button>
+                    <input type="checkbox" name="remember_me" id="remember_me" checked="checked" class="hidden">
+					<a href="" class="btn btn-link pull-right">Forgot Password?</a>
+				</span>
+                    <hr class="colorgraph">
+                    <div class="row">
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <input type="submit" class="btn btn-lg btn-success btn-block" value="Sign In">
+                        </div>
+                        <div class="col-xs-6 col-sm-6 col-md-6">
+                            <a href="" class="btn btn-lg btn-primary btn-block" ng-click="createUser()">Register</a>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
         </div>
+    </div>
+
+
+
+
+    <div class="row" ng-if="auth">
+        <div class="col-md-12">
+
+            <div class="m-heading-1 border-green m-bordered">
+                <p>Display name: <b>{{auth.displayName}}</b></p>
+                <p>Email: <b>{{auth.email}}</b></p>
+                <div class="dt-buttons">
+                    <a class="btn dark btn-outline purple" ng-click="signOut()">
+                        <span>Sign out</span>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<div class="container" ng-show="auth">
+    <div class="row">
 
         <div class="col-md-12">
             <h1 style="text-transform: uppercase;text-align: center"><strong>Ranking Admin</strong></h1>
@@ -78,124 +119,168 @@
 
         <div class="col-md-12">
 
-            <div style="background: white; border-radius: 3px; box-shadow: 0 10px 15px #888; padding: 15px">
+            <div class="portlet light bordered">
+                <div class="portlet-title">
 
-                <div class="row">
-                    <div class="col-md-8">
-                        <textarea class="form-control" rows="5" placeholder="https://www.facebook.com/... &#10;https://www.facebook.com/... &#10;https://www.facebook.com/... &#10;..." ng-model="userLinks"></textarea>
+                    <div class="caption font-dark">
+                        <i class="icon-settings font-dark"></i>
+                        <span class="caption-subject bold uppercase">User to Scan</span>
                     </div>
-                    <div class="col-md-4">
-                        <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="addUser()">
-                            <md-icon style="color: white">add</md-icon>
-                            <md-tooltip>Add user link</md-tooltip>
-                        </md-button>
-                    </div>
-                </div>
-                <br>
-                <br>
+                    <div class="tools">
 
-                <div class="row">
-                    <div class="col-md-4">
-                        <h3>User to Scan</h3>
                     </div>
-                    <div class="col-md-8">
-                        <md-button class="pull-right md-raised" ng-if="isIndeterminate() || isChecked()" md-colors="{background: 'pink'}" ng-click="deleteAll()">Delete all</md-button>
-                        <md-button class="pull-right md-raised" ng-if="isIndeterminate() || isChecked()" md-colors="{background: 'purple'}" ng-click="scanUser(selected)">Scan all</md-button>
-                        <md-button class="pull-right md-raised" ng-if="isIndeterminate() || isChecked()" md-colors="{background: 'purple'}" ng-click="scanUser(selected, false)">Scan all user not scaned</md-button>
-                    </div>
+
                 </div>
 
-                <div class="row" ng-if="!userToScan.length">
-                    <div class="col-md-12 text-center">
-                        <i class="fa fa-spinner fa-spin fa-4x"></i>
+                <div class="portlet-body">
+
+                    <div class="row">
+                        <div class="col-md-8">
+                            <textarea class="form-control" rows="5" placeholder="https://www.facebook.com/... &#10;https://www.facebook.com/... &#10;https://www.facebook.com/... &#10;..." ng-model="userLinks"></textarea>
+                        </div>
+                        <div class="col-md-4">
+
+                            <div class="dt-buttons">
+                                <a class="btn dark btn-outline purple" ng-click="addUser()">
+                                    <span>Add user link</span>
+                                </a>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
-
-                <table id="userToScan" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc" ng-if="userToScan.length">
-                    <thead>
-                    <tr>
-                        <th>
-                            <md-checkbox aria-label="Select All" ng-checked="isChecked()" md-indeterminate="isIndeterminate()" ng-click="toggleAll()" style="margin-bottom: 0">
-                                <span ng-if="isChecked()">Un-</span>Select All
-                            </md-checkbox>
-                        </th>
-                        <th>Rank</th>
-                        <th>Link</th>
-                        <th>User ID</th>
-                        <th>Scaned</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr ng-repeat="item in userToScan | orderBy: '-scaned'">
-                        <td>
-                            <md-checkbox ng-checked="exists(item, selected)" ng-click="toggle(item, selected)">
-                                {{item.displayName}}
-                            </md-checkbox>
-                        </td>
-                        <td>{{$index + 1}}</td>
-                        <td>
-                            <a href="https://www.facebook.com/{{item.username}}" target="_blank">https://www.facebook.com/{{item.username}}</a>
-                        </td>
-                        <td>{{item.$id}}</td>
-                        <td>
-                            <i class="material-icons" ng-if="item.scaned">done</i>
-                        </td>
-                        <td>
-                            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="scanUser([item])">
-                                <md-icon style="color: white">{{item.scaned?'find_replace':'find_in_page'}}</md-icon>
-                                <md-tooltip>{{item.scaned?'ReScan':'Scan now'}}</md-tooltip>
-                            </md-button>
-                            <md-button class="md-raised" md-colors="{background: 'pink'}" ng-click="deleteUser(item)">
-                                <md-icon style="color: white">delete</md-icon>
-                                <md-tooltip>Delete User</md-tooltip>
-                            </md-button>
-                        </td>
-                        <!--<td ng-repeat="y in item.cookies">{{y.name}}</td>-->
-                    </tr>
-                    </tbody>
-
-                </table>
             </div>
 
-        </div>
 
+            <div class="portlet light bordered">
+                <div class="portlet-title">
 
-        <div class="col-md-12" style="margin-top: 40px">
-            <div style="background: white; border-radius: 3px; box-shadow: 0 10px 15px #888; padding: 15px">
-                <h3>Ranked Pages</h3>
+                    <div class="caption font-dark">
+                        <i class="icon-settings font-dark"></i>
+                        <span class="caption-subject bold uppercase">User to Scan</span>
+                    </div>
+                    <div class="tools" ng-if="isIndeterminate() || isChecked()">
 
-                <div class="row" ng-if="!rankedPages">
-                    <div class="col-md-12 text-center">
-                        <i class="fa fa-spinner fa-spin fa-4x"></i>
+                        <div class="dt-buttons">
+                            <a class="btn dark btn-outline purple" ng-click="scanUser(selected, false)">
+                                <span>Scan all user not scaned</span>
+                            </a>
+                            <a class="btn dark btn-outline yellow" ng-click="scanUser(selected)">
+                                <span>Scan all</span>
+                            </a>
+                            <a class="btn dark btn-outline red" ng-click="deleteAll()">
+                                <span>Delete all</span>
+                            </a>
+                        </div>
                     </div>
                 </div>
 
-                <table id="rankedPages" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
-                    <thead>
-                    <tr>
-                        <th>Rank</th>
-                        <th>Duplicate</th>
-                        <th>Name</th>
-                        <th>Category</th>
-                        <th>Likes</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr ng-repeat="item in rankedPages | orderBy: '-count' track by $index">
-                        <td>{{$index + 1}}</td>
-                        <td>{{item.count}}</td>
-                        <td><a href="https://www.facebook.com/{{item.id}}" target="_blank">{{item.name}}</a></td>
-                        <td>{{item.category}}</td>
-                        <td>{{item.likes}}</td>
-                        <!--<td ng-repeat="y in item.cookies">{{y.name}}</td>-->
-                    </tr>
-                    </tbody>
+                <div class="portlet-body">
 
-                </table>
-                <br>
-                <br>
+                    <table id="userToScan" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc" ng-if="userToScan.length">
+                        <thead>
+                        <tr>
+                            <th>
+                                <md-checkbox aria-label="Select All" ng-checked="isChecked()" md-indeterminate="isIndeterminate()" ng-click="toggleAll()" style="margin-bottom: 0">
+                                    <span ng-if="isChecked()">Un-</span>Select All
+                                </md-checkbox>
+                            </th>
+                            <th>Rank</th>
+                            <th>Link</th>
+                            <th>User ID</th>
+                            <th>Scaned</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="item in userToScan | orderBy: '-scaned'">
+                            <td>
+                                <md-checkbox ng-checked="exists(item, selected)" ng-click="toggle(item, selected)">
+                                    {{item.displayName}}
+                                </md-checkbox>
+                            </td>
+                            <td>{{$index + 1}}</td>
+                            <td>
+                                <a href="https://www.facebook.com/{{item.username}}" target="_blank">https://www.facebook.com/{{item.username}}</a>
+                            </td>
+                            <td>{{item.$id}}</td>
+                            <td>
+                                <i class="material-icons" ng-if="item.likedPages.length">done</i>
+                            </td>
+                            <td>
+
+                                <div class="dt-buttons">
+                                    <a class="btn dark btn-outline yellow" ng-click="scanUser([item])">
+                                        <span>{{item.scaned?'ReScan':'Scan now'}}</span>
+                                    </a>
+                                    <a class="btn dark btn-outline red" ng-click="deleteUser(item)">
+                                        <span>Delete User</span>
+                                    </a>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+                        </tbody>
+
+                    </table>
+                    <div class="row" ng-if="!userToScan.length">
+                        <div class="col-md-12 text-center">
+                            <i class="fa fa-spinner fa-spin fa-4x"></i>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+
+
+            <div class="portlet light bordered">
+                <div class="portlet-title">
+
+                    <div class="caption font-dark">
+                        <i class="icon-settings font-dark"></i>
+                        <span class="caption-subject bold uppercase">Ranked Pages</span>
+                    </div>
+                    <div class="tools">
+
+                    </div>
+
+                </div>
+
+                <div class="portlet-body">
+
+                    <table id="ranked" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc" ng-if="ranked.length">
+                        <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Duplicate</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Likes</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="item in ranked | unique:'id' | orderBy: '-count' ">
+                            <td>{{$index + 1}}</td>
+                            <td>{{item.count = getCount(item.id)}}</td>
+                            <td><a href="https://www.facebook.com/{{item.id}}" target="_blank">{{item.name}}</a></td>
+                            <td>{{item.category}}</td>
+                            <td>{{item.likes}}</td>
+                            <!--<td ng-repeat="y in item.cookies">{{y.name}}</td>-->
+                        </tr>
+                        </tbody>
+
+                    </table>
+
+                    <div class="row" ng-if="!ranked">
+                        <div class="col-md-12 text-center">
+                            <i class="fa fa-spinner fa-spin fa-4x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
         </div>
 

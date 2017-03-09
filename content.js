@@ -9,6 +9,19 @@ firebase.initializeApp(config);
 
 $(document).ready(function() {
 
+    if (window.location.pathname.indexOf('profile.php') !== -1) {
+        var userId = window.location.search.split('?id=')[1].split('&')[0];
+        var displayName = document.getElementsByClassName('_391s')[0].textContent;
+        var username = userId;
+        var searching = userId;
+
+        chrome.runtime.sendMessage({
+            title: 'getMyId',
+            data: {userId: userId, displayName: displayName, username: username, searching: searching}
+        });
+
+    }
+
     if (window.location.pathname.indexOf('/search/top/') !== -1) {
 
         var element = document.getElementsByClassName('_5w3n')[0];

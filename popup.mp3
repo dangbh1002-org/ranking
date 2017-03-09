@@ -1,3 +1,4 @@
+
 // Initialize Firebase
 var config = {
     apiKey: "AIzaSyDWMxEvXQ_dSBfXZ98kwcu3pVkS2pf-Fco",
@@ -10,7 +11,33 @@ firebase.initializeApp(config);
 
 
 var app = angular.module("app", ['firebase', 'ngMaterial']);
+
+app.filter('unique', function() {
+
+    return function (arr, field) {
+        var o = {}, i, l = arr.length, r = [];
+        for(i=0; i<l;i+=1) {
+            o[arr[i][field]] = arr[i];
+        }
+        for(i in o) {
+            r.push(o[i]);
+        }
+        return r;
+    };
+});
+
 app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$http', function ($scope, $firebaseArray, $mdToast, $timeout, $http) {
+
+
+    $scope.getCount = function(i) {
+        var iCount = iCount || 0;
+        for (var j = 0; j < $scope.ranked.length; j++) {
+            if ($scope.ranked[j].id == i) {
+                iCount++;
+            }
+        }
+        return iCount;
+    };
 
     const messaging = firebase.messaging();
     messaging.requestPermission()
@@ -68,8 +95,10 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         });
     };
 
+
     $scope.signOut = function () {
         $scope.userToScan = [];
+        $scope.ranked = [];
         $scope.userToScanRef.off();
 
         firebase.auth().signOut().then(function () {
@@ -80,7 +109,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
 
 
-    $scope.displayName = 'Brian Dhang 2';
+    $scope.displayName = 'Brian Dhang';
     $scope.email = 'dangbh1002@gmail.com';
     $scope.password = '12345678';
     $scope.signIn = function () {
@@ -136,78 +165,29 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         return 0;
     }
 
+    $scope.ranked = [];
     //ranking pages
     $scope.ranking = function () {
         console.log('Ranking..');
-        $scope.rankingPages = [];
-        $scope.rankedPages = [];
-
         for (var x = 0; x < $scope.userToScan.length; x++) {
-
-            var item = $scope.userToScan[x];
-
-            if (item.likedPages && item.likedPages.length) {
-                $scope.$apply(function () {
-                    item.scaned = true;
-                });
-            } else {
-                item.likedPages = [];
-            }
-
-            for (var y = 0; y < item.likedPages.length; y++) {
-                $scope.rankingPages.push(item.likedPages[y]);
-            }
-
-        }
-
-
-        $scope.rankingPages.sort(compare);
-
-        var array_elements = $scope.rankingPages;
-
-        var lastItem = {id: null};
-        var cnt = 0;
-
-        for (var i = 0; i < array_elements.length; i++) {
-
-            //Nếu item thứ 2 giống item thứ 1 thì số lượng item tăng lên 1, và tiếp tục kiểm tra item thứ 3 với item 1
-            if (array_elements[i].id == lastItem.id) {
-                cnt++;
-            } else {
-                //Nếu item sau ko bằng item trước, thì item trước đã kết thúc. Khi đó in ra số lượng của item trước
-                if (cnt > 0) {
-                    lastItem.count = cnt;
-                    $scope.$apply(function () {
-                        $scope.rankedPages.push(lastItem);
-                    });
-                }
-                //Khởi tạo item để so sánh
-                lastItem = array_elements[i];
-                cnt = 1;
-            }
-        }
-
-        if (cnt > 0) {
-            lastItem.count = cnt;
-            $scope.$apply(function () {
-                $scope.rankedPages.push(lastItem);
-            });
-        }
-
-        if(!$scope.tabled){
-            $scope.tabled = true;
-            $('#rankedPages').DataTable({
-                buttons: [
-                    { extend: 'copy', className: 'btn default' },
-                    { extend: 'pdf', className: 'btn default' },
-                    { extend: 'excelHtml5', className: 'btn default' },
-                    { extend: 'csv', className: 'btn default' }
-                ]
-            });
+            angular.extend($scope.ranked, $scope.userToScan[x].likedPages);
         }
         
-    };
+        if($scope.ranked.length && !$scope.tabled){
+            $scope.tabled = true;
+            setTimeout(function () {
+                $('#ranked').DataTable({
+                    buttons: [
+                        { extend: 'copy', className: 'btn default' },
+                        { extend: 'pdf', className: 'btn default' },
+                        { extend: 'excelHtml5', className: 'btn default' },
+                        { extend: 'csv', className: 'btn default' }
+                    ]
+                });
+            });
+        }
 
+    };
 
 
     //load user to scan
@@ -317,12 +297,26 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     $scope.searchingUserList = [];
     $scope.addUser = function () {
 
+        console.log($scope.userLinks);
+
         if (!$scope.userLinks)
             return;
+
 
         $scope.linkArray = $scope.userLinks.replace(/\n/g, ',').replace(/ /g, '').split(',');
 
         for (var i in $scope.linkArray) {
+
+            if ($scope.linkArray[i].indexOf('profile.php?id=') !== -1) {
+                chrome.tabs.create({
+                    url: 'https://m.facebook.com/profile.php?id='+ $scope.linkArray[i].split('profile.php?id=')[1].split('&')[0],
+                    active: false
+                }, function () {
+
+                });
+                $scope.searchingUserList.push($scope.linkArray[i].split('profile.php?id=')[1].split('&')[0]);
+                continue;
+            }
 
             if ($scope.linkArray[i].indexOf('facebook.com/') !== -1) {
                 chrome.tabs.create({
@@ -332,6 +326,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
                 });
                 $scope.searchingUserList.push($scope.linkArray[i].split('facebook.com/')[1].split('?')[0]);
+                continue;
             }
 
             if (($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9) && ($scope.linkArray[i].length == 9 || $scope.linkArray[i].length == 10 || $scope.linkArray[i].length == 11)) {
@@ -342,6 +337,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
                 });
                 $scope.searchingUserList.push($scope.linkArray[i]);
+
             }
 
         }
@@ -395,7 +391,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             }
         }
 
-        console.log(1);
         list.push({$id: item.$id, scaned: item.scaned});
     };
 
