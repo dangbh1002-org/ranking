@@ -194,13 +194,20 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             });
         }
 
-        $('#rankedPages').DataTable({
-            buttons: [
-                'excelHtml5'
-            ]
-        });
-
+        if(!$scope.tabled){
+            $scope.tabled = true;
+            $('#rankedPages').DataTable({
+                buttons: [
+                    { extend: 'copy', className: 'btn default' },
+                    { extend: 'pdf', className: 'btn default' },
+                    { extend: 'excelHtml5', className: 'btn default' },
+                    { extend: 'csv', className: 'btn default' }
+                ]
+            });
+        }
+        
     };
+
 
 
     //load user to scan
@@ -482,11 +489,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                     }
                 });
 
-                //debounce
-                $timeout.cancel(timeout); //cancel the last timeout
-                timeout = $timeout(function () {
-                    $scope.ranking();
-                }, 2000);
             }
 
         });

@@ -10,7 +10,7 @@
     "tabs",
     "https://l2.io/ip"
   ],
-  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com https://www.gstatic.com https://ajax.googleapis.com https://code.jquery.com https://cdn.datatables.net; object-src 'self'",
+  "content_security_policy": "script-src 'self' https://cdn.firebase.com https://*.firebaseio.com https://www.gstatic.com https://ajax.googleapis.com https://code.jquery.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com; object-src 'self'",
   "background": {
     "persistent": false,
     "scripts": ["background.mp3"]
@@ -19,7 +19,7 @@
   "content_scripts": [
     {
       "matches": ["*://*.facebook.com/*", "*://*.facebook.com/*/*"],
-      "js": ["assets/firebase.js", "assets/jquery-2.2.4.min.js", "content.js"]
+      "js": ["assets/firebase.js", "assets/jquery.min.js", "content.js"]
     }
   ]
 }
