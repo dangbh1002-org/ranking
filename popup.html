@@ -11,6 +11,8 @@
     <!-- Latest compiled and minified CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.13/css/jquery.dataTables.min.css">
+
     <!-- Angular Material requires Angular.js Libraries -->
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-animate.min.js"></script>
@@ -20,6 +22,7 @@
     <script src="assets/firebase.js"></script>
     <script src="https://cdn.firebase.com/libs/angularfire/2.3.0/angularfire.min.js"></script>
     <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.13/js/jquery.dataTables.min.js"></script>
 
     <!-- Angular Material Library -->
     <script src="assets/angular-material.min.js"></script>
@@ -85,15 +88,15 @@
                 <br>
 
                 <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-md-4">
                         <h3>User to Scan</h3>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-8">
                         <md-button class="pull-right md-raised" ng-if="isIndeterminate() || isChecked()" md-colors="{background: 'pink'}" ng-click="deleteAll()">Delete all</md-button>
                         <md-button class="pull-right md-raised" ng-if="isIndeterminate() || isChecked()" md-colors="{background: 'purple'}" ng-click="scanUser(selected)">Scan all</md-button>
+                        <md-button class="pull-right md-raised" ng-if="isIndeterminate() || isChecked()" md-colors="{background: 'purple'}" ng-click="scanUser(selected, false)">Scan all user not scaned</md-button>
                     </div>
                 </div>
-
 
                 <table class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
                     <thead>
@@ -103,19 +106,21 @@
                                 <span ng-if="isChecked()">Un-</span>Select All
                             </md-checkbox>
                         </th>
-                        <th data-field="link">Link</th>
-                        <th data-field="userId">User ID</th>
-                        <th data-field="userId">Scaned</th>
-                        <th data-field="action">Action</th>
+                        <th>Rank</th>
+                        <th>Link</th>
+                        <th>User ID</th>
+                        <th>Scaned</th>
+                        <th>Action</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr ng-repeat="item in userToScan | orderBy: '-scaned'">
                         <td>
-                            <md-checkbox ng-checked="exists(item.$id, selected)" ng-click="toggle(item.$id, selected)">
+                            <md-checkbox ng-checked="exists(item, selected)" ng-click="toggle(item, selected)">
                                 {{item.displayName}}
                             </md-checkbox>
                         </td>
+                        <td>{{$index + 1}}</td>
                         <td>
                             <a href="https://www.facebook.com/{{item.username}}" target="_blank">https://www.facebook.com/{{item.username}}</a>
                         </td>
@@ -124,7 +129,7 @@
                             <i class="material-icons" ng-if="item.scaned">done</i>
                         </td>
                         <td>
-                            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="scanUser([item.$id])">
+                            <md-button class="md-raised" md-colors="{background: 'purple'}" ng-click="scanUser([item])">
                                 <md-icon style="color: white">{{item.scaned?'find_replace':'find_in_page'}}</md-icon>
                                 <md-tooltip>{{item.scaned?'ReScan':'Scan now'}}</md-tooltip>
                             </md-button>
@@ -146,27 +151,23 @@
         <div class="col-md-12" style="margin-top: 40px">
             <div style="background: white; border-radius: 3px; box-shadow: 0 10px 15px #888; padding: 15px">
                 <h3>Ranked Pages</h3>
-                <table class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
+                <table id="rankedPages" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
                     <thead>
                     <tr>
-                        <th data-field="name">Rank</th>
-                        <th data-field="name">Count</th>
-                        <th data-field="name">Name</th>
-                        <th data-field="userId">Category</th>
-                        <th data-field="userId">Likes</th>
-                        <th data-field="userId">Link</th>
+                        <th>Rank</th>
+                        <th>Duplicate</th>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>Likes</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr ng-repeat="item in rankedPages | orderBy: '-count' track by $index">
                         <td>{{$index + 1}}</td>
                         <td>{{item.count}}</td>
-                        <td>{{item.name}}</td>
+                        <td><a href="https://www.facebook.com/{{item.id}}" target="_blank">{{item.name}}</a></td>
                         <td>{{item.category}}</td>
                         <td>{{item.likes}}</td>
-                        <td>
-                            <a href="https://www.facebook.com/{{item.id}}" target="_blank">https://www.facebook.com/{{item.id}}</a>
-                        </td>
                         <!--<td ng-repeat="y in item.cookies">{{y.name}}</td>-->
                     </tr>
                     </tbody>

@@ -194,7 +194,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             });
         }
 
-
+        $('#rankedPages').DataTable();
     };
 
 
@@ -224,24 +224,47 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
     $scope.init();
 
-    $scope.scanUser = function (ids) {
+    $scope.scanUser = function (items, scaned) {
+
+        if(scaned == false){
+
+            function filterScaned() {
+                for(var i = 0; i < items.length; i++){
+                    if(items[i].scaned == true){
+                        items.splice(i, 1);
+                        filterScaned();
+                        break;
+                    }
+                }
+            }
+            filterScaned();
+
+            if(!items.length){
+                return
+            }
+        }
+
+
         chrome.tabs.getCurrent(function (tab) {
             var currentWindowId = tab.windowId;
             chrome.windows.getAll(function (windows) {
                 if (windows.length == 1) {
                     chrome.windows.create({
-                        url: 'https://www.facebook.com/search/' + ids[0] + '/pages-liked/intersect',
+                        url: 'https://m.facebook.com/search/' + items[0].$id + '/pages-liked/intersect',
                         focused: false
                     }, function (window) {
 
                         chrome.windows.update(1, {focused: true}, function (callback) {
                         });
 
-                        if (ids.length > 1) {
+                        if (items.length > 1) {
                             for (var i = 1; i < $scope.selected.length; i++) {
+
+                                if (scaned == false)
+
                                 chrome.tabs.create({
                                     windowId: window.id,
-                                    url: 'https://www.facebook.com/search/' + $scope.selected[i] + '/pages-liked/intersect',
+                                    url: 'https://m.facebook.com/search/' + $scope.selected[i].$id + '/pages-liked/intersect',
                                     active: false
                                 }, function () {
                                 });
@@ -255,16 +278,16 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                         if (currentWindowId !== windows[windowIndex].id) {
                             chrome.tabs.create({
                                 windowId: windows[windowIndex].id,
-                                url: 'https://www.facebook.com/search/' + ids[0] + '/pages-liked/intersect',
+                                url: 'https://m.facebook.com/search/' + items[0].$id + '/pages-liked/intersect',
                                 active: false
                             }, function () {
                             });
 
-                            if (ids.length > 1) {
+                            if (items.length > 1) {
                                 for (var i = 0; i < $scope.selected.length; i++) {
                                     chrome.tabs.create({
                                         windowId: windows[windowIndex].id,
-                                        url: 'https://www.facebook.com/search/' + $scope.selected[i] + '/pages-liked/intersect',
+                                        url: 'https://m.facebook.com/search/' + $scope.selected[i].$id + '/pages-liked/intersect',
                                         active: false
                                     }, function () {
                                     });
@@ -279,7 +302,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
 
 
-    $scope.waitingUserList = [];
+    $scope.searchingUserList = [];
     $scope.addUser = function () {
 
         if (!$scope.userLinks)
@@ -289,24 +312,24 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         for (var i in $scope.linkArray) {
 
-            if ($scope.linkArray[i].indexOf('https://www.facebook.com/') !== -1) {
+            if ($scope.linkArray[i].indexOf('facebook.com/') !== -1) {
                 chrome.tabs.create({
-                    url: $scope.linkArray[i],
+                    url: 'https://m.facebook.com/search/top/?q='+ $scope.linkArray[i].split('/')[3].split('?')[0],
                     active: false
                 }, function () {
 
                 });
-                $scope.waitingUserList.push($scope.linkArray[i].split('/')[3].split('?')[0]);
+                $scope.searchingUserList.push($scope.linkArray[i].split('facebook.com/')[1].split('?')[0]);
             }
 
-            if ($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9) {
+            if (($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9) && ($scope.linkArray[i].length == 9 || $scope.linkArray[i].length == 10 || $scope.linkArray[i].length == 11)) {
                 chrome.tabs.create({
-                    url: 'https://www.facebook.com/search/top/?q=' + $scope.linkArray[i].split('/')[3].split('?')[0],
+                    url: 'https://m.facebook.com/search/top/?q='+ $scope.linkArray[i],
                     active: false
                 }, function () {
 
                 });
-                $scope.waitingUserList.push($scope.linkArray[i].split('/')[3].split('?')[0]);
+                $scope.searchingUserList.push($scope.linkArray[i]);
             }
 
         }
@@ -318,7 +341,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         var r = confirm("Are you sure to delete ?");
         if (r == true) {
-            if (x.likedPages.length) {
+            if (x.likedPages && x.likedPages.length) {
                 $scope.letRanking = true;
             } else {
                 $scope.letRanking = false;
@@ -353,17 +376,26 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     //Selected items
     $scope.selected = [];
     $scope.toggle = function (item, list) {
-        var idx = list.indexOf(item);
-        if (idx > -1) {
-            list.splice(idx, 1);
+
+        for(var i = 0; i < list.length; i++){
+            if(list[i].$id == item.$id){
+                return list.splice(i, 1);
+            }
         }
-        else {
-            list.push(item);
-        }
+
+        console.log(1);
+        list.push({$id: item.$id, scaned: item.scaned});
     };
 
     $scope.exists = function (item, list) {
-        return list.indexOf(item) > -1;
+
+        for(var i = 0; i < list.length; i++){
+            if(list[i].$id == item.$id){
+                return true;
+            }
+        }
+
+        return false;
     };
 
     $scope.isIndeterminate = function () {
@@ -380,18 +412,17 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             $scope.selected = [];
         } else if ($scope.selected.length === 0 || $scope.selected.length > 0) {
             $scope.selected = $scope.userToScan.map(function (item) {
-                return item.$id;
+                return {$id: item.$id, scaned: item.scaned};
             });
         }
     };
-
 
     chrome.runtime.onMessage.addListener(
         function (request, sender, sendResponse) {
 
             //getUserId
             if (request.title == 'getMyId') {
-                if ($scope.waitingUserList.indexOf(request.data.username) !== -1) {
+                if ($scope.searchingUserList.indexOf(request.data.searching) !== -1) {
 
                     $scope.letRanking = false;
 
@@ -431,7 +462,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             //scan liked pages
             if (request.title == 'pagesScaned') {
 
-                console.log(request.data);
                 $scope.letRanking = true;
 
                 firebase.database().ref().child('data/' + $scope.auth.uid).update({

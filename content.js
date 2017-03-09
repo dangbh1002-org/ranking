@@ -7,69 +7,61 @@ var config = {
 };
 firebase.initializeApp(config);
 
+$(document).ready(function() {
 
-document.onreadystatechange = function () {
-    if (document.readyState == "complete") {
+    if (window.location.pathname.indexOf('/search/top/') !== -1) {
 
-        //get user id
-        if(window.location.pathname.split('/')[1] !== 'search'){
+        var element = document.getElementsByClassName('_5w3n')[0];
+        var userId = element && JSON.parse(element.getAttribute("data-store")).result_id;
+        var displayName = document.getElementsByClassName('_5w3i')[0].textContent;
+        var username = element.href.split('?')[0].split('facebook.com/')[1];
+        var searching = window.location.search.slice(3, window.location.search.length).split('&')[0];
 
-            var element = document.querySelector('meta[property="al:ios:url"]');
-            var userId = element && element.getAttribute("content").split('/')[3];
-            var displayName = document.getElementsByClassName('_1frb')[0].value;
-            var username = window.location.pathname.split('/')[1];
-
-            chrome.runtime.sendMessage({title: 'getMyId', data: {userId: userId, displayName: displayName, username: username}});
-        }
-
-
-        //scan liked pages
-        if(window.location.pathname.split('/')[1] == 'search'){
-
-            var interval = setInterval(function () {
-                if (document.getElementsByClassName("phm _64f").length) {
-                    var likedPages = [];
-                    var elements = document.getElementsByClassName("_3u1 _gli _5und");
-                    for (var i = 0; i < elements.length; i++) {
-                        var pageId = JSON.parse(elements[i].getAttribute("data-bt")).id;
-                        var pageName = elements[i].querySelector('._gll ._5d-5').textContent;
-
-                        var pageInfo = elements[i].querySelector('._pac').childNodes;
-                        if(pageInfo.length == 4){
-                            var pageCategory = pageInfo[0].textContent;
-                            var pageLikes = pageInfo[2].textContent.split(' ')[0];
-                        } else {
-                            var pageCategory = pageInfo[1].textContent;
-                            var pageLikes = pageInfo[3].textContent.split(' ')[0];
-                        }
-
-                        likedPages.push(
-                            {id: pageId, name: pageName, category: pageCategory, likes: pageLikes}
-                        );
-                    }
-
-                    if (i == elements.length) {
-                        var userId = window.location.pathname.split('/')[2];
-                        chrome.runtime.sendMessage({title: 'pagesScaned', data: {userId: userId, likedPages: likedPages}});
-                    }
-
-                    clearInterval(interval);
-                }
-
-                window.scrollTo(0, document.body.scrollHeight);
-
-                chrome.runtime.sendMessage({title: 'activeMe'}, function(response) {
-                    if(response && response.title == 'activeDone'){
-                        console.log('Thanks!');
-                    }
-                });
-
-            }, 1000);
-
-        }
+        chrome.runtime.sendMessage({
+            title: 'getMyId',
+            data: {userId: userId, displayName: displayName, username: username, searching: searching}
+        });
 
     }
-};
+
+
+    //scan liked pages
+    if (window.location.pathname.indexOf('/pages-liked/intersect') !== -1) {
+
+        var interval = setInterval(function () {
+            if (document.getElementsByClassName("_2jre").length) {
+                var likedPages = [];
+                var elements = document.getElementsByClassName("_5w3g");
+
+                for (var i = 0; i < elements.length; i++) {
+                    var pageId = JSON.parse(elements[i].getAttribute("data-xt").slice(3, elements[i].getAttribute("data-xt").length)).result_id;
+                    var pageName = elements[i].querySelector('._5w3i').textContent;
+
+                    var pageCategory = elements[i].querySelector('._5w3k').textContent;
+                    var pageLikes = elements[i].querySelector('._5w3l').textContent.split(' ')[0];
+
+                    likedPages.push(
+                        {id: pageId, name: pageName, category: pageCategory, likes: pageLikes}
+                    );
+
+                }
+
+                if (i == elements.length) {
+                    var userId = window.location.pathname.split('/')[2];
+                    chrome.runtime.sendMessage({title: 'pagesScaned', data: {userId: userId, likedPages: likedPages}});
+                }
+
+                clearInterval(interval);
+            }
+
+            window.scrollTo(0, document.body.scrollHeight);
+
+            chrome.runtime.sendMessage({title: 'activeMe'});
+
+        }, 1000);
+
+    }
+});
 
 
 
