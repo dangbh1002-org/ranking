@@ -169,8 +169,10 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     //ranking pages
     $scope.ranking = function () {
         console.log('Ranking..');
+
         for (var x = 0; x < $scope.userToScan.length; x++) {
-            angular.extend($scope.ranked, $scope.userToScan[x].likedPages);
+            $scope.ranked = $scope.userToScan[x].likedPages? $scope.ranked.concat($scope.userToScan[x].likedPages):$scope.ranked;
+
         }
 
         if($scope.ranked.length && !$scope.tabled){
