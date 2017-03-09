@@ -62,20 +62,12 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         firebase.auth().createUserWithEmailAndPassword($scope.email, $scope.password).then(function (user) {
 
             firebase.database().ref().child('users/' + user.uid).update({
-                name: $scope.displayName,
                 email: $scope.email
-            });
-
-            firebase.database().ref().child('users/' + user.uid).update({token: $scope.token}).catch(function (err) {
-                // console.log(err);
-            });
-            firebase.database().ref().child('data/' + user.uid).update({token: $scope.token}).catch(function (err) {
-                // console.log(err);
             });
 
             user.updateProfile({
                 displayName: $scope.displayName,
-                photoURL: "https://example.com/jane-q-user/profile.jpg"
+                photoURL: ""
             }).then(function () {
                 // Update successful.
             }, function (error) {
@@ -119,13 +111,15 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         $scope.loading = true;
 
-        firebase.auth().signInWithEmailAndPassword($scope.email, $scope.password).then(function (user) {
-            firebase.database().ref().child('users/' + user.uid).update({token: $scope.token}).catch(function (err) {
+        firebase.auth().signInWithEmailAndPassword($scope.email, $scope.password).then(function (auth) {
+
+            firebase.database().ref().child('users/' + auth.uid).update({token: $scope.token}).catch(function (err) {
                 // console.log(err);
             });
-            firebase.database().ref().child('data/' + user.uid).update({token: $scope.token}).catch(function (err) {
+            firebase.database().ref().child('data/' + auth.uid).update({token: $scope.token}).catch(function (err) {
                 // console.log(err);
             });
+
         }).catch(function (error) {
             // Handle Errors here.
             var errorCode = error.code;
