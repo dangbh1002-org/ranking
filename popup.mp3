@@ -54,6 +54,16 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             console.log('Unable to get permission to notify.', err);
         });
 
+    $scope.resetPassword = function () {
+        firebase.auth().sendPasswordResetEmail($scope.email).then(function () {
+            $scope.$apply(function () {
+                $scope.loginError = false;
+                $scope.loginMessage = 'Reset password email sent.';
+            });
+        }, function (error) {
+            // An error happened.
+        });
+    };
 
     $scope.createUser = function () {
 
@@ -125,8 +135,15 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             // Handle Errors here.
             var errorCode = error.code;
             var errorMessage = error.message;
-            console.log(error);
+
+            $scope.$apply(function () {
+                $scope.loginError = true;
+                $scope.loginMessage = error.message;
+            });
+
             // ...
+        }, {
+            remember: "sessionOnly"
         });
     };
 
