@@ -172,7 +172,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         for (var x = 0; x < $scope.userToScan.length; x++) {
             angular.extend($scope.ranked, $scope.userToScan[x].likedPages);
         }
-        
+
         if($scope.ranked.length && !$scope.tabled){
             $scope.tabled = true;
             setTimeout(function () {
