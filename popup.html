@@ -117,6 +117,48 @@
                 <br>
             </div>
 
+            <div class="portlet light" ng-show="accList.length">
+                <div class="portlet-title">
+
+                    <div class="caption font-dark">
+                        <i class="icon-settings font-dark"></i>
+                        <span class="caption-subject bold uppercase">List acc</span>
+                    </div>
+                    <div class="tools" ng-if="isIndeterminate() || isChecked()">
+                    </div>
+                </div>
+
+                <div class="portlet-body">
+
+                    <table id="accList" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
+                        <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Display Name</th>
+                            <th>Email</th>
+                            <th>Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="item in accList track by $index">
+                            <td>{{$index + 1}}</td>
+                            <td>{{item.displayName}}</td>
+                            <td>{{item.email}}</td>
+                            <td>
+                                <div class="dt-buttons">
+                                    <a class="btn dark btn-outline red" ng-click="deleteAcc(item)">
+                                        <span>Delete acc</span>
+                                    </a>
+                                </div>
+
+                            </td>
+
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
 
         </div>
     </div>
@@ -137,6 +179,8 @@
                 </div>
             </div>
 
+
+
         </div>
     </div>
 </div>
@@ -147,6 +191,8 @@
     <div class="row">
 
         <div class="col-md-12">
+
+
             <div class="portlet light">
 
                 <div class="portlet-body">

@@ -28,31 +28,6 @@ app.filter('unique', function() {
 
 app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$http', function ($scope, $firebaseArray, $mdToast, $timeout, $http) {
 
-    $scope.getCount = function(i) {
-        var iCount = iCount || 0;
-        for (var j = 0; j < $scope.ranked.length; j++) {
-            if ($scope.ranked[j].id == i) {
-                iCount++;
-            }
-        }
-        return iCount;
-    };
-
-    $scope.resetPassword = function () {
-        firebase.auth().sendPasswordResetEmail($scope.email).then(function () {
-            $scope.$apply(function () {
-                $scope.loginError = false;
-                $scope.loginMessage = 'Reset password email sent.';
-            });
-        }, function (error) {
-            $scope.$apply(function () {
-                $scope.loginError = true;
-                $scope.loginMessage = error.message;
-            });
-            // An error happened.
-        });
-    };
-
     $scope.createUser = function () {
 
         if(!$scope.user.isAdmin){
@@ -96,16 +71,26 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         });
     };
 
+    $scope.loadAccList = function () {
 
-    $scope.signOut = function () {
+        $scope.accListRef = firebase.database().ref().child("users/");
+        $scope.accList = $firebaseArray($scope.accListRef);
+    };
 
-        firebase.auth().signOut().then(function () {
-            // Sign-out successful.
+    $scope.resetPassword = function () {
+        firebase.auth().sendPasswordResetEmail($scope.email).then(function () {
+            $scope.$apply(function () {
+                $scope.loginError = false;
+                $scope.loginMessage = 'Reset password email sent.';
+            });
         }, function (error) {
+            $scope.$apply(function () {
+                $scope.loginError = true;
+                $scope.loginMessage = error.message;
+            });
             // An error happened.
         });
     };
-
 
     $scope.signIn = function () {
 
@@ -134,19 +119,270 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         });
     };
 
-    $scope.updateProfile = function () {
-        if ($scope.auth) {
+    $scope.signOut = function () {
 
-            $scope.auth.updateProfile({
-                displayName: $scope.displayName
-            }).then(function () {
-                console.log('Update successful.');
-                // Update successful.
-            }, function (error) {
-                // An error happened.
-            });
+        firebase.auth().signOut().then(function () {
+            // Sign-out successful.
+        }, function (error) {
+            // An error happened.
+        });
+    };
+
+    $scope.addUser = function () {
+
+        if (!$scope.userLinks)
+            return;
+
+
+        $scope.linkArray = $scope.userLinks.replace(/\n/g, ',').replace(/ /g, '').split(',');
+
+        for (var i in $scope.linkArray) {
+
+            if ($scope.linkArray[i].indexOf('profile.php?id=') !== -1) {
+                chrome.tabs.create({
+                    url: 'https://m.facebook.com/profile.php?id='+ $scope.linkArray[i].split('profile.php?id=')[1].split('&')[0],
+                    active: false
+                }, function () {
+
+                });
+                $scope.searchingUserList.push($scope.linkArray[i].split('profile.php?id=')[1].split('&')[0]);
+                continue;
+            }
+
+            if ($scope.linkArray[i].indexOf('facebook.com/') !== -1) {
+                chrome.tabs.create({
+                    url: 'https://m.facebook.com/search/top/?q='+ $scope.linkArray[i].split('/')[3].split('?')[0],
+                    active: false
+                }, function () {
+
+                });
+                $scope.searchingUserList.push($scope.linkArray[i].split('facebook.com/')[1].split('?')[0]);
+                continue;
+            }
+
+            if (($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9) && ($scope.linkArray[i].length == 9 || $scope.linkArray[i].length == 10 || $scope.linkArray[i].length == 11)) {
+                chrome.tabs.create({
+                    url: 'https://m.facebook.com/search/top/?q='+ $scope.linkArray[i],
+                    active: false
+                }, function () {
+
+                });
+                $scope.searchingUserList.push($scope.linkArray[i]);
+
+            }
+
         }
 
+
+    };
+
+    $scope.deleteUser = function (x) {
+
+        var r = confirm("Are you sure to delete ?");
+        if (r == true) {
+            if (x.likedPages && x.likedPages.length) {
+                $scope.letRanking = true;
+            } else {
+                $scope.letRanking = false;
+            }
+
+            $scope.userToScan.$remove(x).then(function (ref) {
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Delete success!!!')
+                        .hideDelay(2000)
+                );
+            });
+        }
+    };
+
+    //Delete All
+    $scope.deleteAll = function () {
+        var r = confirm("Deleted all?");
+        if (r == true) {
+            $scope.selected.forEach(function (id) {
+                var itemRef = firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + id);
+                itemRef.remove();
+            });
+            $mdToast.show(
+                $mdToast.simple()
+                    .textContent('Delete success!!!')
+                    .hideDelay(2000)
+            );
+        }
+    };
+
+    //load user to scan
+    $scope.loadUserToScan = function () {
+
+        $scope.userToScanRef = firebase.database().ref().child("data/" + $scope.auth.uid + "/userToScan/");
+        $scope.userToScan = $firebaseArray($scope.userToScanRef);
+
+        $scope.letRanking = true;
+        var timeout;
+        $scope.userToScanRef.on('value', function (snapshot) {
+
+            if ($scope.letRanking) {
+                //debounce
+                $timeout.cancel(timeout); //cancel the last timeout
+                timeout = $timeout(function () {
+                    $scope.ranking();
+                }, 2000);
+            }
+
+        });
+    };
+
+    $scope.scanUser = function (items, scaned) {
+
+        if(scaned == false){
+
+            function filterScaned() {
+                for(var i = 0; i < items.length; i++){
+                    if(items[i].scaned == true){
+                        items.splice(i, 1);
+                        filterScaned();
+                        break;
+                    }
+                }
+            }
+            filterScaned();
+
+            if(!items.length){
+                return
+            }
+        }
+
+
+        chrome.tabs.getCurrent(function (tab) {
+            var currentWindowId = tab.windowId;
+            chrome.windows.getAll(function (windows) {
+                if (windows.length == 1) {
+                    chrome.windows.create({
+                        url: 'https://m.facebook.com/search/' + items[0].$id + '/pages-liked/intersect',
+                        focused: false
+                    }, function (window) {
+
+                        chrome.windows.update(1, {focused: true}, function (callback) {
+                        });
+
+                        if (items.length > 1) {
+                            for (var i = 1; i < $scope.selected.length; i++) {
+
+                                if (scaned == false)
+
+                                    chrome.tabs.create({
+                                        windowId: window.id,
+                                        url: 'https://m.facebook.com/search/' + $scope.selected[i].$id + '/pages-liked/intersect',
+                                        active: false
+                                    }, function () {
+                                    });
+
+                            }
+                        }
+                    });
+
+                } else {
+                    for (var windowIndex in windows) {
+                        if (currentWindowId !== windows[windowIndex].id) {
+                            chrome.tabs.create({
+                                windowId: windows[windowIndex].id,
+                                url: 'https://m.facebook.com/search/' + items[0].$id + '/pages-liked/intersect',
+                                active: false
+                            }, function () {
+                            });
+
+                            if (items.length > 1) {
+                                for (var i = 0; i < $scope.selected.length; i++) {
+                                    chrome.tabs.create({
+                                        windowId: windows[windowIndex].id,
+                                        url: 'https://m.facebook.com/search/' + $scope.selected[i].$id + '/pages-liked/intersect',
+                                        active: false
+                                    }, function () {
+                                    });
+                                }
+                            }
+
+                        }
+                    }
+                }
+            });
+        });
+    };
+
+    //ranking pages
+    $scope.ranking = function () {
+        $scope.ranked = [];
+        for (var x = 0; x < $scope.userToScan.length; x++) {
+            $scope.ranked = $scope.userToScan[x].likedPages? $scope.ranked.concat($scope.userToScan[x].likedPages):$scope.ranked;
+
+        }
+
+        if($scope.ranked.length && !$scope.tabled){
+            $scope.tabled = true;
+            setTimeout(function () {
+
+                $('#ranked').DataTable({
+                    pagingType: "full_numbers",
+                    buttons: [
+                        { extend: 'csv', className: 'btn purple btn-outline', filename: 'Ranked'},
+                        { extend: 'excel', className: 'btn yellow btn-outline', filename: 'Ranked'},
+                        { extend: 'pdf', className: 'btn red btn-outline', filename: 'Ranked'}
+                    ],
+                    "dom": "<'row' <'col-md-12'B>><'row'<'col-md-6 col-sm-12'l><'col-md-6 col-sm-12'f>r><'table-scrollable't><'row'<'col-md-5 col-sm-12'i><'col-md-7 col-sm-12'p>>"
+                });
+            }, 100);
+        }
+        $scope.loading = false;
+
+    };
+
+    $scope.getCount = function(i) {
+        var iCount = iCount || 0;
+        for (var j = 0; j < $scope.ranked.length; j++) {
+            if ($scope.ranked[j].id == i) {
+                iCount++;
+            }
+        }
+        return iCount;
+    };
+
+    //Selected items
+    $scope.toggle = function (item, list) {
+
+        for(var i = 0; i < list.length; i++){
+            if(list[i].$id == item.$id){
+                return list.splice(i, 1);
+            }
+        }
+
+        list.push({$id: item.$id, scaned: item.scaned});
+    };
+    $scope.exists = function (item, list) {
+
+        for(var i = 0; i < list.length; i++){
+            if(list[i].$id == item.$id){
+                return true;
+            }
+        }
+
+        return false;
+    };
+    $scope.isIndeterminate = function () {
+        return ($scope.selected.length !== 0 &&
+        $scope.selected.length !== $scope.userToScan.length);
+    };
+    $scope.isChecked = function () {
+        return $scope.selected.length === $scope.userToScan.length;
+    };
+    $scope.toggleAll = function () {
+        if ($scope.selected.length === $scope.userToScan.length) {
+            $scope.selected = [];
+        } else if ($scope.selected.length === 0 || $scope.selected.length > 0) {
+            $scope.selected = $scope.userToScan.map(function (item) {
+                return {$id: item.$id, scaned: item.scaned};
+            });
+        }
     };
 
     $scope.init = function () {
@@ -251,13 +487,20 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             if($scope.userToScanRef){
                 $scope.userToScanRef.off();
             }
-
+            
+            if($scope.accList ){
+                $scope.accList.off();
+            }
 
             if (auth) {
 
                 var userRef = firebase.database().ref().child('users/'+$scope.auth.uid);
                 userRef.on('value', function (snapshot) {
                     $scope.user = snapshot.val();
+                    if($scope.user.isAdmin){
+
+                        $scope.loadAccList();
+                    }
                 });
 
                 $scope.loadUserToScan();
@@ -270,261 +513,8 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         $scope.searchingUserList = [];
         $scope.selected = [];
         $scope.ranked = [];
+        $scope.userToScan = [];
     };
     $scope.init();
-
-
-    //ranking pages
-    $scope.ranking = function () {
-        $scope.ranked = [];
-        for (var x = 0; x < $scope.userToScan.length; x++) {
-            $scope.ranked = $scope.userToScan[x].likedPages? $scope.ranked.concat($scope.userToScan[x].likedPages):$scope.ranked;
-
-        }
-
-        if($scope.ranked.length && !$scope.tabled){
-            $scope.tabled = true;
-            setTimeout(function () {
-
-                $('#ranked').DataTable({
-                    pagingType: "full_numbers",
-                    buttons: [
-                        { extend: 'csv', className: 'btn purple btn-outline', filename: 'Ranked'},
-                        { extend: 'excel', className: 'btn yellow btn-outline', filename: 'Ranked'},
-                        { extend: 'pdf', className: 'btn red btn-outline', filename: 'Ranked'}
-                    ],
-                    "dom": "<'row' <'col-md-12'B>><'row'<'col-md-6 col-sm-12'l><'col-md-6 col-sm-12'f>r><'table-scrollable't><'row'<'col-md-5 col-sm-12'i><'col-md-7 col-sm-12'p>>"
-                });
-            }, 100);
-        }
-        $scope.loading = false;
-
-    };
-
-
-    //load user to scan
-    $scope.loadUserToScan = function () {
-
-        $scope.userToScanRef = firebase.database().ref().child("data/" + $scope.auth.uid + "/userToScan/");
-        $scope.userToScan = $firebaseArray($scope.userToScanRef);
-
-        $scope.letRanking = true;
-        var timeout;
-        $scope.userToScanRef.on('value', function (snapshot) {
-
-            if ($scope.letRanking) {
-                //debounce
-                $timeout.cancel(timeout); //cancel the last timeout
-                timeout = $timeout(function () {
-                    $scope.ranking();
-                }, 2000);
-            }
-
-        });
-    };
-
-    $scope.scanUser = function (items, scaned) {
-
-        if(scaned == false){
-
-            function filterScaned() {
-                for(var i = 0; i < items.length; i++){
-                    if(items[i].scaned == true){
-                        items.splice(i, 1);
-                        filterScaned();
-                        break;
-                    }
-                }
-            }
-            filterScaned();
-
-            if(!items.length){
-                return
-            }
-        }
-
-
-        chrome.tabs.getCurrent(function (tab) {
-            var currentWindowId = tab.windowId;
-            chrome.windows.getAll(function (windows) {
-                if (windows.length == 1) {
-                    chrome.windows.create({
-                        url: 'https://m.facebook.com/search/' + items[0].$id + '/pages-liked/intersect',
-                        focused: false
-                    }, function (window) {
-
-                        chrome.windows.update(1, {focused: true}, function (callback) {
-                        });
-
-                        if (items.length > 1) {
-                            for (var i = 1; i < $scope.selected.length; i++) {
-
-                                if (scaned == false)
-
-                                chrome.tabs.create({
-                                    windowId: window.id,
-                                    url: 'https://m.facebook.com/search/' + $scope.selected[i].$id + '/pages-liked/intersect',
-                                    active: false
-                                }, function () {
-                                });
-
-                            }
-                        }
-                    });
-
-                } else {
-                    for (var windowIndex in windows) {
-                        if (currentWindowId !== windows[windowIndex].id) {
-                            chrome.tabs.create({
-                                windowId: windows[windowIndex].id,
-                                url: 'https://m.facebook.com/search/' + items[0].$id + '/pages-liked/intersect',
-                                active: false
-                            }, function () {
-                            });
-
-                            if (items.length > 1) {
-                                for (var i = 0; i < $scope.selected.length; i++) {
-                                    chrome.tabs.create({
-                                        windowId: windows[windowIndex].id,
-                                        url: 'https://m.facebook.com/search/' + $scope.selected[i].$id + '/pages-liked/intersect',
-                                        active: false
-                                    }, function () {
-                                    });
-                                }
-                            }
-
-                        }
-                    }
-                }
-            });
-        });
-    };
-
-    $scope.addUser = function () {
-
-        if (!$scope.userLinks)
-            return;
-
-
-        $scope.linkArray = $scope.userLinks.replace(/\n/g, ',').replace(/ /g, '').split(',');
-
-        for (var i in $scope.linkArray) {
-
-            if ($scope.linkArray[i].indexOf('profile.php?id=') !== -1) {
-                chrome.tabs.create({
-                    url: 'https://m.facebook.com/profile.php?id='+ $scope.linkArray[i].split('profile.php?id=')[1].split('&')[0],
-                    active: false
-                }, function () {
-
-                });
-                $scope.searchingUserList.push($scope.linkArray[i].split('profile.php?id=')[1].split('&')[0]);
-                continue;
-            }
-
-            if ($scope.linkArray[i].indexOf('facebook.com/') !== -1) {
-                chrome.tabs.create({
-                    url: 'https://m.facebook.com/search/top/?q='+ $scope.linkArray[i].split('/')[3].split('?')[0],
-                    active: false
-                }, function () {
-
-                });
-                $scope.searchingUserList.push($scope.linkArray[i].split('facebook.com/')[1].split('?')[0]);
-                continue;
-            }
-
-            if (($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9) && ($scope.linkArray[i].length == 9 || $scope.linkArray[i].length == 10 || $scope.linkArray[i].length == 11)) {
-                chrome.tabs.create({
-                    url: 'https://m.facebook.com/search/top/?q='+ $scope.linkArray[i],
-                    active: false
-                }, function () {
-
-                });
-                $scope.searchingUserList.push($scope.linkArray[i]);
-
-            }
-
-        }
-
-
-    };
-
-    $scope.deleteUser = function (x) {
-
-        var r = confirm("Are you sure to delete ?");
-        if (r == true) {
-            if (x.likedPages && x.likedPages.length) {
-                $scope.letRanking = true;
-            } else {
-                $scope.letRanking = false;
-            }
-
-            $scope.userToScan.$remove(x).then(function (ref) {
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Delete success!!!')
-                        .hideDelay(2000)
-                );
-            });
-        }
-    };
-
-    //Delete All
-    $scope.deleteAll = function () {
-        var r = confirm("Deleted all?");
-        if (r == true) {
-            $scope.selected.forEach(function (id) {
-                var itemRef = firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + id);
-                itemRef.remove();
-            });
-            $mdToast.show(
-                $mdToast.simple()
-                    .textContent('Delete success!!!')
-                    .hideDelay(2000)
-            );
-        }
-    };
-
-    //Selected items
-    $scope.toggle = function (item, list) {
-
-        for(var i = 0; i < list.length; i++){
-            if(list[i].$id == item.$id){
-                return list.splice(i, 1);
-            }
-        }
-
-        list.push({$id: item.$id, scaned: item.scaned});
-    };
-
-    $scope.exists = function (item, list) {
-
-        for(var i = 0; i < list.length; i++){
-            if(list[i].$id == item.$id){
-                return true;
-            }
-        }
-
-        return false;
-    };
-
-    $scope.isIndeterminate = function () {
-        return ($scope.selected.length !== 0 &&
-        $scope.selected.length !== $scope.userToScan.length);
-    };
-
-    $scope.isChecked = function () {
-        return $scope.selected.length === $scope.userToScan.length;
-    };
-
-    $scope.toggleAll = function () {
-        if ($scope.selected.length === $scope.userToScan.length) {
-            $scope.selected = [];
-        } else if ($scope.selected.length === 0 || $scope.selected.length > 0) {
-            $scope.selected = $scope.userToScan.map(function (item) {
-                return {$id: item.$id, scaned: item.scaned};
-            });
-        }
-    };
-
 
 }]);
