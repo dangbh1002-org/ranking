@@ -134,24 +134,17 @@
                         <thead>
                         <tr>
                             <th>Rank</th>
-                            <th>Display Name</th>
                             <th>Email</th>
-                            <th>Action</th>
+                            <th>Server token</th>
+                            <th>Client token</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr ng-repeat="item in accList track by $index">
                             <td>{{$index + 1}}</td>
-                            <td>{{item.displayName}}</td>
                             <td>{{item.email}}</td>
-                            <td>
-                                <div class="dt-buttons">
-                                    <a class="btn dark btn-outline red" ng-click="deleteAcc(item)">
-                                        <span>Delete acc</span>
-                                    </a>
-                                </div>
-
-                            </td>
+                            <td>{{item.serverToken}}...</td>
+                            <td>{{item.clientToken}}...</td>
 
                         </tr>
                         </tbody>

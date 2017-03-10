@@ -75,6 +75,21 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
         $scope.accListRef = firebase.database().ref().child("users/");
         $scope.accList = $firebaseArray($scope.accListRef);
+
+        $scope.accList.$loaded(function (users) {
+
+            for(var x = 0; x < $scope.accList.length; x++){
+                $scope.accList[x].serverToken = $scope.accList[x].token? $scope.accList[x].token.slice(0, 12):'';
+                $scope.loadClientToken($scope.accList[x].$id, x)
+            }
+        })
+    };
+
+    $scope.loadClientToken = function (id, index) {
+        $scope.accList[index].href = firebase.database().ref().child("data/"+ id + '/token');
+        $scope.accList[index].href.once('value', function (token) {
+            $scope.accList[index].clientToken = token.val()? token.val().slice(0, 12):'';
+        })
     };
 
     $scope.resetPassword = function () {
@@ -470,13 +485,15 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             $scope.userToScan = [];
             $scope.tabled = false;
             $("#ranked").DataTable().clear().destroy();
+
             $scope.ranked = [];
             if($scope.userToScanRef){
                 $scope.userToScanRef.off();
             }
 
-            if($scope.accList ){
-                $scope.accList.off();
+            $scope.accList = [];
+            if($scope.accListRef){
+                $scope.accListRef.off();
             }
 
             if (auth) {
@@ -485,7 +502,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                 userRef.on('value', function (snapshot) {
                     $scope.user = snapshot.val();
                     if($scope.user.isAdmin){
-
                         $scope.loadAccList();
                     }
                 });
