@@ -9,10 +9,54 @@ firebase.initializeApp(config);
 
 $(document).ready(function() {
 
+
+    //get User From Right Click
+    function getUserFromRightClick(e){
+        e = e || window.event;
+        switch (e.which) {
+            case 3:
+                if(e.target.getAttribute("data-hovercard")){
+                    var userId = e.target.getAttribute("data-hovercard").split('id=')[1].split('&')[0];
+                    var displayName = e.target.textContent;
+                    var username = e.target.href.split('facebook.com/')[1].split('?')[0];
+
+                    chrome.runtime.sendMessage({
+                        title: 'getMyIdNow',
+                        data: {userId: userId, displayName: displayName, username: username}
+                    }, function (response) {
+                        if(response.title == 'getMyIdNowDone'){
+                            alert('Get user done!')
+                        }
+                    });
+
+                }
+
+                break;
+        }
+    }
+    function initRightClick() {
+        $('a').off('mousedown').on('mousedown', function (event) {
+            getUserFromRightClick(event)
+        });
+    }
+    initRightClick();
+    $('em._4qba').on('click', function (event) {
+        setTimeout(function () {
+            initRightClick();
+        },2000);
+    });
+    var timeout;
+    $(window).scroll(function (event) {
+        clearTimeout(timeout);
+        timeout = setTimeout(function () {
+            initRightClick();
+        }, 2000);
+    });
+
+    //get user from mobile view
     if (window.location.href.indexOf('m.facebook.com/') !== -1 && window.location.pathname.indexOf('/pages-liked/intersect') == -1) {
         var userId = document.getElementsByClassName('_39pi')[0].href.split('&id=')[1].split('&')[0];
         var displayName = document.getElementsByClassName('_391s')[0].textContent;
-
 
         if (window.location.href.indexOf('profile.php') !== -1) {
             var username = window.location.search.split('?id=')[1].split('&')[0];
@@ -32,21 +76,26 @@ $(document).ready(function() {
     if (window.location.pathname.indexOf('/pages-liked/intersect') !== -1) {
 
         var interval = setInterval(function () {
-            if (document.getElementsByClassName("_2jre").length) {
+            if (document.getElementsByClassName("phm _64f").length) {
                 var likedPages = [];
-                var elements = document.getElementsByClassName("_5w3g");
+                var elements = document.getElementsByClassName("_3u1 _gli _5und");
 
                 for (var i = 0; i < elements.length; i++) {
-                    var pageId = JSON.parse(elements[i].getAttribute("data-xt").slice(3, elements[i].getAttribute("data-xt").length)).result_id;
-                    var pageName = elements[i].querySelector('._5w3i').textContent;
+                    var pageId = JSON.parse(elements[i].getAttribute("data-bt")).id;
+                    var pageName = elements[i].querySelector('._gll ._5d-5').textContent;
 
-                    var pageCategory = elements[i].querySelector('._5w3k').textContent;
-                    var pageLikes = elements[i].querySelector('._5w3l').textContent.split(' ')[0];
+                    var pageInfo = elements[i].querySelector('._pac').childNodes;
+                    if (pageInfo.length == 4) {
+                        var pageCategory = pageInfo[0].textContent;
+                        var pageLikes = pageInfo[2].textContent.split(' ')[0];
+                    } else {
+                        pageCategory = pageInfo[1].textContent;
+                        pageLikes = pageInfo[3].textContent.split(' ')[0];
+                    }
 
                     likedPages.push(
                         {id: pageId, name: pageName, category: pageCategory, likes: pageLikes}
                     );
-
                 }
 
                 if (i == elements.length) {
@@ -57,13 +106,13 @@ $(document).ready(function() {
                 clearInterval(interval);
             }
 
-            if (document.getElementsByClassName("_1s_y").length) {
-                chrome.runtime.sendMessage({title: 'pagesScaned', data: {userId: userId, likedPages: []}});
-            }
-
             window.scrollTo(0, document.body.scrollHeight);
 
-            chrome.runtime.sendMessage({title: 'activeMe'});
+            chrome.runtime.sendMessage({title: 'activeMe'}, function (response) {
+                if (response && response.title == 'activeDone') {
+                    console.log('Thanks!');
+                }
+            });
 
         }, 1000);
 
