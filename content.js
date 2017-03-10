@@ -9,38 +9,27 @@ firebase.initializeApp(config);
 
 $(document).ready(function() {
 
-    if (window.location.pathname.indexOf('profile.php') !== -1) {
-        var userId = window.location.search.split('?id=')[1].split('&')[0];
+    if (window.location.href.indexOf('m.facebook.com/') !== -1 && window.location.pathname.indexOf('/pages-liked/intersect') == -1) {
+        var userId = document.getElementsByClassName('_39pi')[0].href.split('&id=')[1].split('&')[0];
         var displayName = document.getElementsByClassName('_391s')[0].textContent;
-        var username = userId;
-        var searching = userId;
+
+
+        if (window.location.href.indexOf('profile.php') !== -1) {
+            var username = window.location.search.split('?id=')[1].split('&')[0];
+            var searching = userId;
+        } else {
+            username = window.location.href.split('m.facebook.com/')[1].split('?')[0];
+            searching = username;
+        }
 
         chrome.runtime.sendMessage({
             title: 'getMyId',
             data: {userId: userId, displayName: displayName, username: username, searching: searching}
         });
-
     }
-
-    if (window.location.pathname.indexOf('/search/top/') !== -1) {
-
-        var element = document.getElementsByClassName('_5w3n')[0];
-        var userId = element && JSON.parse(element.getAttribute("data-store")).result_id;
-        var displayName = document.getElementsByClassName('_5w3i')[0].textContent;
-        var username = element.href.split('?')[0].split('facebook.com/')[1];
-        var searching = window.location.search.slice(3, window.location.search.length).split('&')[0];
-
-        chrome.runtime.sendMessage({
-            title: 'getMyId',
-            data: {userId: userId, displayName: displayName, username: username, searching: searching}
-        });
-
-    }
-
 
     //scan liked pages
     if (window.location.pathname.indexOf('/pages-liked/intersect') !== -1) {
-
 
         var interval = setInterval(function () {
             if (document.getElementsByClassName("_2jre").length) {

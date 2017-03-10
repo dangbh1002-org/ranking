@@ -151,28 +151,15 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
 
             if ($scope.linkArray[i].indexOf('facebook.com/') !== -1) {
                 chrome.tabs.create({
-                    url: 'https://m.facebook.com/search/top/?q='+ $scope.linkArray[i].split('/')[3].split('?')[0],
+                    url: 'https://m.facebook.com/'+ $scope.linkArray[i].split('/')[3].split('?')[0],
                     active: false
                 }, function () {
 
                 });
                 $scope.searchingUserList.push($scope.linkArray[i].split('facebook.com/')[1].split('?')[0]);
-                continue;
-            }
-
-            if (($scope.linkArray[i][0] == 0 || $scope.linkArray[i][0] == 1 || $scope.linkArray[i][0] == 9) && ($scope.linkArray[i].length == 9 || $scope.linkArray[i].length == 10 || $scope.linkArray[i].length == 11)) {
-                chrome.tabs.create({
-                    url: 'https://m.facebook.com/search/top/?q='+ $scope.linkArray[i],
-                    active: false
-                }, function () {
-
-                });
-                $scope.searchingUserList.push($scope.linkArray[i]);
-
             }
 
         }
-
 
     };
 
@@ -487,7 +474,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             if($scope.userToScanRef){
                 $scope.userToScanRef.off();
             }
-            
+
             if($scope.accList ){
                 $scope.accList.off();
             }
