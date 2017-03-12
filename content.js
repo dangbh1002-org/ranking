@@ -20,15 +20,15 @@ $(document).ready(function() {
                     var displayName = e.target.textContent;
                     var username = e.target.href.split('facebook.com/')[1].split('?')[0];
 
-                    chrome.runtime.sendMessage({
-                        title: 'getMyIdNow',
-                        data: {userId: userId, displayName: displayName, username: username}
-                    }, function (response) {
-                        if(response.title == 'getMyIdNowDone'){
-                            alert('Get user done!')
-                        }
-                    });
+                    var r = confirm("Bạn có muốn thêm người dùng này vào tệp khách hàng nghiên cứu?");
+                    if (r == true) {
+                        chrome.runtime.sendMessage({
+                            title: 'getMyIdNow',
+                            data: {userId: userId, displayName: displayName, username: username}
+                        }, function (response) {
 
+                        });
+                    }
                 }
 
                 break;
@@ -45,6 +45,8 @@ $(document).ready(function() {
             initRightClick();
         },2000);
     });
+
+
     var timeout;
     $(window).scroll(function (event) {
         clearTimeout(timeout);
