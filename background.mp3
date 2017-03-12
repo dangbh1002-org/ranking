@@ -4,7 +4,7 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 
 chrome.windows.onFocusChanged.addListener(function (windowId){
     if(windowId !== 1 && windowId !== -1){
-        // chrome.windows.update(1, {focused: true}, function (callback){
-        // });
+        chrome.windows.update(1, {focused: true}, function (callback){
+        });
     }
 });
