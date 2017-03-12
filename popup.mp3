@@ -221,6 +221,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         $scope.userToScanRef = firebase.database().ref().child("data/" + $scope.auth.uid + "/userToScan/");
         $scope.userToScan = $firebaseArray($scope.userToScanRef);
 
+
         $scope.letRanking = true;
         var timeout;
         $scope.userToScanRef.on('value', function (snapshot) {
@@ -257,17 +258,21 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             }
         }
 
+        for(var i = 0; i < items.length; i++){
+            $scope.userToScan[items[i].index].scaning = true;
+        }
+
         $scope.countScaned = 0;
         $scope.waitingToScan = items;
-
-        $scope.scanSingleUser($scope.waitingToScan, $scope.countScaned);
+        $scope.scanSingleUser($scope.countScaned);
 
     };
 
-    $scope.scanSingleUser = function (items, countScaned) {
+    $scope.scanSingleUser = function (countScaned) {
 
-        if(countScaned < items.length){
-            var item = items[countScaned];
+        if(countScaned < $scope.waitingToScan.length){
+            var item = $scope.waitingToScan[countScaned];
+
             $scope.countScaned += 1;
         } else {
             return
@@ -285,7 +290,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                         chrome.windows.update(1, {focused: true}, function (callback) {
                         });
 
-                        $scope.scanSingleUser($scope.waitingToScan, $scope.countScaned);
+                        $scope.scanSingleUser($scope.countScaned);
 
                     });
 
@@ -300,7 +305,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                             }, function () {
 
                             });
-
 
                         }
                     }
@@ -347,7 +351,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
     };
 
     //Selected items
-    $scope.toggle = function (item, list) {
+    $scope.toggle = function (item, list, index) {
 
         for(var i = 0; i < list.length; i++){
             if(list[i].$id == item.$id){
@@ -355,7 +359,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             }
         }
 
-        list.push({$id: item.$id, scaned: item.scaned});
+        list.push({$id: item.$id, index: index, scaned: item.scaned});
     };
     $scope.exists = function (item, list) {
 
@@ -378,8 +382,9 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         if ($scope.selected.length === $scope.userToScan.length) {
             $scope.selected = [];
         } else if ($scope.selected.length === 0 || $scope.selected.length > 0) {
-            $scope.selected = $scope.userToScan.map(function (item) {
-                return {$id: item.$id, scaned: item.scaned};
+            $scope.selected = $scope.userToScan.map(function (item, index) {
+                console.log(index);
+                return {$id: item.$id, index: index,  scaned: item.scaned};
             });
         }
     };
@@ -495,7 +500,14 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                         console.log("Data could not be saved." + error);
                     } else {
                         chrome.tabs.remove(sender.tab.id, function () {
-                            $scope.scanSingleUser($scope.waitingToScan, $scope.countScaned);
+
+                            for(var i = 0; i < $scope.userToScan.length; i++){
+                                if($scope.userToScan[i].$id == request.data.userId){
+                                    $scope.userToScan[i].scaning = false;
+                                }
+                            }
+
+                            $scope.scanSingleUser($scope.countScaned);
                         });
                     }
                 });
