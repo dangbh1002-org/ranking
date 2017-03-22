@@ -7,15 +7,15 @@ var config = {
 };
 firebase.initializeApp(config);
 
-$(document).ready(function() {
+$(document).ready(function () {
 
 
     //get User From Right Click
-    function getUserFromRightClick(e){
+    function getUserFromRightClick(e) {
         e = e || window.event;
         switch (e.which) {
             case 3:
-                if(e.target.getAttribute("data-hovercard")){
+                if (e.target.getAttribute("data-hovercard")) {
                     var userId = e.target.getAttribute("data-hovercard").split('id=')[1].split('&')[0];
                     var displayName = e.target.textContent;
                     var username = e.target.href.split('facebook.com/')[1].split('?')[0];
@@ -34,16 +34,18 @@ $(document).ready(function() {
                 break;
         }
     }
+
     function initRightClick() {
         $('a').off('mousedown').on('mousedown', function (event) {
             getUserFromRightClick(event)
         });
     }
+
     initRightClick();
     $('em._4qba').on('click', function (event) {
         setTimeout(function () {
             initRightClick();
-        },2000);
+        }, 2000);
     });
 
 
@@ -102,6 +104,10 @@ $(document).ready(function() {
 
                 if (i == elements.length) {
                     var userId = window.location.pathname.split('/')[2];
+
+
+
+
                     chrome.runtime.sendMessage({title: 'pagesScaned', data: {userId: userId, likedPages: likedPages}});
                 }
 

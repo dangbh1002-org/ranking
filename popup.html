@@ -256,7 +256,7 @@ https://www.facebook.com/...
                         <tbody>
                         <tr ng-repeat="item in userToScan | orderBy: 'scaned'">
                             <td>
-                                <md-checkbox ng-checked="exists(item, selected)" ng-click="toggle(item, selected, $index)">
+                                <md-checkbox ng-checked="exists(item, selected)" ng-click="toggle(item, selected)">
                                     {{item.displayName}}
                                 </md-checkbox>
                             </td>

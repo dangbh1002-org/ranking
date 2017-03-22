@@ -221,7 +221,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         $scope.userToScanRef = firebase.database().ref().child("data/" + $scope.auth.uid + "/userToScan/");
         $scope.userToScan = $firebaseArray($scope.userToScanRef);
 
-
         $scope.letRanking = true;
         var timeout;
         $scope.userToScanRef.on('value', function (snapshot) {
@@ -259,8 +258,16 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         }
 
         for(var i = 0; i < items.length; i++){
-            $scope.userToScan[items[i].index].scaning = true;
+            firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + items[i].$id).update({
+                scaning: true
+            }, function (error) {
+                if (error) {
+                    alert('Sai token. Liên hệ với admin để reset.');
+                    console.log("Data could not be saved." + error);
+                }
+            });
         }
+
 
         $scope.countScaned = 0;
         $scope.waitingToScan = items;
@@ -284,6 +291,10 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                 if (windows.length == 1) {
                     chrome.windows.create({
                         url: 'https://facebook.com/search/' + item.$id + '/pages-liked/intersect',
+                        left: 1920,
+                        top: 1080,
+                        width: 10,
+                        height: 10,
                         focused: false
                     }, function (window) {
 
@@ -318,7 +329,6 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
         $scope.ranked = [];
         for (var x = 0; x < $scope.userToScan.length; x++) {
             $scope.ranked = $scope.userToScan[x].likedPages? $scope.ranked.concat($scope.userToScan[x].likedPages):$scope.ranked;
-
         }
 
         if($scope.ranked.length && !$scope.tabled){
@@ -359,7 +369,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             }
         }
 
-        list.push({$id: item.$id, index: index, scaned: item.scaned});
+        list.push({$id: item.$id, scaned: item.scaned});
     };
     $scope.exists = function (item, list) {
 
@@ -383,8 +393,7 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             $scope.selected = [];
         } else if ($scope.selected.length === 0 || $scope.selected.length > 0) {
             $scope.selected = $scope.userToScan.map(function (item, index) {
-                console.log(index);
-                return {$id: item.$id, index: index,  scaned: item.scaned};
+                return {$id: item.$id,  scaned: item.scaned};
             });
         }
     };
@@ -494,18 +503,12 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
                     token: $scope.token
                 });
 
-                firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({likedPages: request.data.likedPages}, function (error) {
+                firebase.database().ref().child('data/' + $scope.auth.uid + '/userToScan/' + request.data.userId).update({likedPages: request.data.likedPages, scaning: false}, function (error) {
                     if (error) {
                         alert('Sai token. Liên hệ với admin để reset.');
                         console.log("Data could not be saved." + error);
                     } else {
                         chrome.tabs.remove(sender.tab.id, function () {
-
-                            for(var i = 0; i < $scope.userToScan.length; i++){
-                                if($scope.userToScan[i].$id == request.data.userId){
-                                    $scope.userToScan[i].scaning = false;
-                                }
-                            }
 
                             $scope.scanSingleUser($scope.countScaned);
                         });
