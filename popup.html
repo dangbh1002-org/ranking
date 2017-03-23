@@ -306,6 +306,9 @@ https://www.facebook.com/...
                 </div>
 
                 <div class="portlet-body">
+                    <md-checkbox ng-model="myFilterLikes" ng-click="filterLikes()">
+                        Filter 1M likes
+                    </md-checkbox>
 
                     <table id="ranked" class="table table-bordered table-hover .table-condensed" style="border: 1px solid #ccc">
                         <thead>
@@ -318,7 +321,7 @@ https://www.facebook.com/...
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="item in ranked | unique:'id' | orderBy: '-count' ">
+                        <tr ng-repeat="item in ranked | unique:'id' | filterLikes: myFilterLikes| orderBy: '-count' ">
                             <td>{{$index + 1}}</td>
                             <td>{{item.count = getCount(item.id)}}</td>
                             <td><a href="https://www.facebook.com/{{item.id}}" target="_blank">{{item.name}}</a></td>

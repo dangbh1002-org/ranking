@@ -26,6 +26,21 @@ app.filter('unique', function() {
     };
 });
 
+app.filter('filterLikes', function() {
+    return function (arr, field) {
+
+        var i, l = arr.length, r = [];
+        for(i=0; i<l;i+=1) {
+            if(Number(arr[i].likes.replace(/,/g, '')) < 1000000 || !field){
+                r.push(arr[i]);
+            }
+
+        }
+        return r;
+
+    };
+});
+
 app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$http', function ($scope, $firebaseArray, $mdToast, $timeout, $http) {
 
     $scope.createUser = function () {
@@ -358,6 +373,26 @@ app.controller("myCtrl", ['$scope', '$firebaseArray', '$mdToast', '$timeout', '$
             }
         }
         return iCount;
+    };
+
+    //Toggle filter Likes
+    $scope.filterLikes = function () {
+        $("#ranked").DataTable().clear().destroy();
+
+        setTimeout(function () {
+
+            $('#ranked').DataTable({
+                pagingType: "full_numbers",
+                buttons: [
+                    { extend: 'csv', className: 'btn purple btn-outline', filename: 'Ranked'},
+                    { extend: 'excel', className: 'btn yellow btn-outline', filename: 'Ranked'},
+                    { extend: 'pdf', className: 'btn red btn-outline', filename: 'Ranked'}
+                ],
+                "dom": "<'row' <'col-md-12'B>><'row'<'col-md-6 col-sm-12'l><'col-md-6 col-sm-12'f>r><'table-scrollable't><'row'<'col-md-5 col-sm-12'i><'col-md-7 col-sm-12'p>>"
+            });
+
+        }, 100);
+
     };
 
     //Selected items
